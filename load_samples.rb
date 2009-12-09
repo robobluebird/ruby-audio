@@ -1,5 +1,7 @@
 require 'ostruct'
 require 'pp'
+require 'rubygems'
+require 'google_chart'
 
 $LOAD_PATH << 'ext/sndfile'
 $LOAD_PATH << 'lib'
