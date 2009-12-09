@@ -1,4 +1,4 @@
-require 'audio'
+require 'lib/audio'
 require 'sndfile.so'
 
 module Audio

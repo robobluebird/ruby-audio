@@ -1,5 +1,5 @@
 require 'mkmf'
-$CFLAGS = '-I/opt/local/include -I/usr/local/include'
+$CFLAGS = '-I/opt/local/include -I/opt/local/lib/ruby/gems/1.8/gems/narray-0.5.9.7'
 $LDFLAGS = '-L/opt/local/lib -L/usr/local/lib'
 system 'swig -ruby -I/usr/include -I/usr/local/include -I/opt/local/include sndfile.i'
 unless find_library 'sndfile', 'sf_open'
