@@ -7,10 +7,11 @@ end
 
 desc "RDoc documentation"
 task :doc do
-  sh 'rdoc -t "ruby-audio" -m README README lib'
+  sh 'rdoc --op "rdoc" -t "ruby-audio" -m README README lib'
 end
 
 file '.config' do
+  sh 'cd ext/sndfile/ && ruby extconf.rb && cd ../.. ' 
   sh 'ruby setup.rb config'
 end
 
