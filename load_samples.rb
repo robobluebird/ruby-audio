@@ -2,13 +2,10 @@ require 'ostruct'
 require 'pp'
 require 'rubygems'
 require 'google_chart'
-
-$LOAD_PATH << 'ext/sndfile'
-$LOAD_PATH << 'lib'
-$LOAD_PATH << 'lib/audio'
-require 'audio'
-require 'sndfile'
 require 'narray'
+
+require 'lib/audio.rb'
+require 'lib/audio/sndfile.rb'
 
 @files = [
 'audio_files/063_1.WAV',
