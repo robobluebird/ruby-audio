@@ -1,0 +1,6 @@
+/pkg/*
+/rdoc/
+*.gemspec
+
+# This way, for now, nothing except what's there shows up
+/ext/sndfile/*
