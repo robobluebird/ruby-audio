@@ -135,13 +135,15 @@ class SndfileTest < Test::Unit::TestCase
     assert_nil sf_get_string(@sf,SF_STR_COMMENT)
   end
 
-  def test_rubization
+  def test_magical_open
     sf = Audio::Soundfile.open(TEST_WAV)
     assert_instance_of Audio::Soundfile, sf
     assert sf.format_check
     assert_equal Audio::Soundfile::SF_FORMAT_WAV, 0x010000
     sf.close
+  end
 
+  def test_magical_read
     Audio::Soundfile.open(TEST_WAV) do |sf|
       a = sf.read_float(100)
       assert_instance_of Audio::Sound, a
@@ -164,6 +166,26 @@ class SndfileTest < Test::Unit::TestCase
       assert n <= a.size
       n = sf.read(a)
       assert n <= a.size
+    end
+  end
+
+  def test_magical_write
+    Audio::Soundfile.open(TEST_WAV) do |sf|
+      # Read data
+      a = sf.read_float(1000)
+
+      # Test magical write
+      sf2 = Audio::Soundfile.open('bogus.wav', 'rw', sf.info)
+      sf2.write(a)
+
+      # Check that read data matches written data
+      sf2.seek(0, SEEK_SET)
+      b = sf2.read_float(1000)
+      assert a == b
+
+      # Clean up
+      sf2.close
+      File.delete('bogus.wav') if File.exist?('bogus.wav')
     end
   end
 end

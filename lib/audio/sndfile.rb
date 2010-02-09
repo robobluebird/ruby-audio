@@ -99,7 +99,7 @@ module Audio
     # Automagic write method. Type is autodetected.
     def write(na)
       sym = "write_#{TYPES[na.typecode]}".to_sym
-      self.send sym, na, na.size
+      self.send sym, na
     end
 
     %w{read readf}.each do |r|
