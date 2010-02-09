@@ -14,7 +14,7 @@ spec = Gem::Specification.new do |s|
 
   s.platform     = Gem::Platform::RUBY
   s.has_rdoc     = true
-  s.files        = FileList['README', 'Rakefile', 'LICENSE', 'TODO', 'examples/**/*.rb', 'examples/**/*.wav', 'lib/**/*.rb', 'test/*.rb', 'test/*.wav', 'ext/sndfile/extconf.rb', 'ext/sndfile/sndfile.i']
+  s.files        = FileList['README.rdoc', 'Rakefile', 'LICENSE', 'TODO', 'examples/**/*.rb', 'examples/**/*.wav', 'lib/**/*.rb', 'test/*.rb', 'test/*.wav', 'ext/sndfile/extconf.rb', 'ext/sndfile/sndfile.i']
   s.require_path = 'lib'
   s.extensions   = ["ext/sndfile/extconf.rb"]
   s.test_files   = Dir[*['test/*.rb']]
@@ -37,8 +37,8 @@ desc "Generate documentation"
 Rake::RDocTask.new(:rdoc) do |rdoc|
   rdoc.rdoc_dir = 'rdoc'
   rdoc.title    = 'ruby-audio'
-  rdoc.options << '--line-numbers' << '--main' << 'README'
-  rdoc.rdoc_files.include('README')
+  rdoc.options << '--line-numbers' << '--main' << 'README.rdoc'
+  rdoc.rdoc_files.include('README.rdoc')
   rdoc.rdoc_files.include('lib/**/*.rb')
 end
 
