@@ -6,7 +6,7 @@ require 'rake/gempackagetask'
 
 spec = Gem::Specification.new do |s|
   s.name    = 'ruby-audio'
-  s.version = '0.2.0'
+  s.version = '0.2.1'
   s.summary = 'ruby-audio wraps around libsndfile to provide simplified sound reading and writing support to ruby programs'
   s.authors  = ['Hans Fugal <hans@fugal.net>', 'Stephen Augenstein']
   s.email    = 'perl.programmer@gmail.com'
