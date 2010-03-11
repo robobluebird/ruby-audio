@@ -3,14 +3,18 @@
 ID ra_short_sym, ra_int_sym, ra_float_sym, ra_double_sym;
 
 void Init_ra_buffer(VALUE mBase) {
-    VALUE cRABuffer = rb_define_class_under(mBase, "Buffer", rb_cObject);
+    VALUE cRABuffer = rb_define_class_under(mBase, "CBuffer", rb_cObject);
     rb_define_alloc_func(cRABuffer, ra_buffer_allocate);
     rb_define_method(cRABuffer, "initialize", ra_buffer_init, -1);
-    rb_define_method(cRABuffer, "channels", ra_buffer_channels, 0);
-    rb_define_method(cRABuffer, "size", ra_buffer_size, 0);
-    rb_define_method(cRABuffer, "real_size", ra_buffer_real_size, 0);
+    rb_define_method(cRABuffer, "channels",   ra_buffer_channels, 0);
+    rb_define_method(cRABuffer, "size",       ra_buffer_size, 0);
+    rb_define_method(cRABuffer, "real_size",  ra_buffer_real_size, 0);
     rb_define_method(cRABuffer, "real_size=", ra_buffer_real_size_set, 1);
-    rb_define_method(cRABuffer, "type", ra_buffer_type, 0);
+    rb_define_method(cRABuffer, "type",       ra_buffer_type, 0);
+    /*
+    rb_define_method(rb_cString, "[]", rb_str_aref_m, -1);
+    rb_define_method(rb_cString, "[]=", rb_str_aset_m, -1);
+    */
 
     ra_short_sym = rb_intern("short");
     ra_int_sym = rb_intern("int");

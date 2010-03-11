@@ -7,4 +7,6 @@ module RubyAudio
 end
 
 require 'rubyaudio_ext'
+require 'ruby-audio/error'
 require 'ruby-audio/buffer'
+require 'ruby-audio/sound_info'
