@@ -1,8 +1,8 @@
 require 'rubygems'
 require 'rake'
-require 'rake/testtask'
 require 'rake/rdoctask'
 require 'rake/gempackagetask'
+require 'spec/rake/spectask'
 
 spec = Gem::Specification.new do |s|
   s.name    = 'ruby-audio'
@@ -25,7 +25,7 @@ spec = Gem::Specification.new do |s|
 end
 
 desc 'Default: Run the tests'
-task :default => :test
+task :default => :spec
 
 # Rake gem & package routines
 Rake::GemPackageTask.new spec do |pkg|
@@ -42,7 +42,6 @@ Rake::RDocTask.new(:rdoc) do |rdoc|
   rdoc.rdoc_files.include('lib/**/*.rb')
 end
 
-desc "Run tests"
-Rake::TestTask.new do |t|
-  t.libs += ['ext/sndfile']
+Spec::Rake::SpecTask.new do |t|
+  t.spec_opts = ['--options', 'spec/spec.opts']
 end
