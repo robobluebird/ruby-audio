@@ -6,22 +6,20 @@ require 'spec/rake/spectask'
 
 spec = Gem::Specification.new do |s|
   s.name    = 'ruby-audio'
-  s.version = '0.2.1'
+  s.version = '1.0.0'
   s.summary = 'ruby-audio wraps around libsndfile to provide simplified sound reading and writing support to ruby programs'
-  s.authors  = ['Hans Fugal <hans@fugal.net>', 'Stephen Augenstein']
+  s.authors  = ['Stephen Augenstein']
   s.email    = 'perl.programmer@gmail.com'
   s.homepage = 'http://github.com/warhammerkid/ruby-audio'
 
   s.platform     = Gem::Platform::RUBY
   s.has_rdoc     = true
-  s.files        = FileList['README.rdoc', 'Rakefile', 'LICENSE', 'TODO', 'examples/**/*.rb', 'examples/**/*.wav', 'lib/**/*.rb', 'test/*.rb', 'test/*.wav', 'ext/sndfile/extconf.rb', 'ext/sndfile/sndfile.i']
+  s.files        = FileList['README.rdoc', 'Rakefile', 'LICENSE', 'lib/**/*.rb', 'spec/**/*.{rb,opts,wav,mp3}', 'ext/extconf.rb', 'ext/*.{c,h}']
   s.require_path = 'lib'
-  s.extensions   = ["ext/sndfile/extconf.rb"]
-  s.test_files   = Dir[*['test/*.rb']]
+  s.extensions   = ["ext/extconf.rb"]
+  s.test_files   = Dir[*['spec/**/*_spec.rb']]
 
-  s.add_dependency('narray')
   s.requirements << 'libsndfile (http://www.mega-nerd.com/libsndfile/)'
-  s.requirements << 'SWIG (http://www.swig.org/)'
 end
 
 desc 'Default: Run the tests'
