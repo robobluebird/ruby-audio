@@ -6,6 +6,10 @@ describe RubyAudio::Sound do
   TEST_MP3 = File.dirname(__FILE__)+'/data/what.mp3'
   OUT_WAV = File.dirname(__FILE__)+'/data/temp.wav'
 
+  after :each do
+    File.delete(OUT_WAV) if File.exists?(OUT_WAV)
+  end
+
   it "should open a standard wav without issues" do
     lambda {
       RubyAudio::Sound.open(MONO_TEST_WAV)
@@ -103,5 +107,23 @@ describe RubyAudio::Sound do
         snd.read(buf)
       end
     }.should raise_error(RubyAudio::Error, "channel count mismatch: 1 vs 2")
+  end
+
+  it "should allow writing to a new sound" do
+    in_buf = RubyAudio::Buffer.float(100)
+    out_buf = RubyAudio::Buffer.float(100)
+    out_info = nil
+    RubyAudio::Sound.open(MONO_TEST_WAV) do |snd|
+      snd.read(in_buf)
+      out_info = snd.info.clone
+    end
+
+    RubyAudio::Sound.open(OUT_WAV, 'rw', out_info) do |snd|
+      snd.write(in_buf)
+      snd.seek(0)
+      snd.read(out_buf)
+    end
+
+    out_buf[50].should == in_buf[50]
   end
 end

@@ -135,7 +135,37 @@ static VALUE ra_sound_write(VALUE self, VALUE buf) {
     Data_Get_Struct(self, RA_SOUND, snd);
     if(snd->closed) rb_raise(eRubyAudioError, "closed sound");
 
-    return INT2FIX(0);
+    // Get buffer struct
+    RA_BUFFER *b;
+    Data_Get_Struct(buf, RA_BUFFER, b);
+
+    // Get info struct
+    SF_INFO *info;
+    Data_Get_Struct(snd->info, SF_INFO, info);
+
+    // Check buffer channels matches actual channels
+    if(b->channels != info->channels) {
+        rb_raise(eRubyAudioError, "channel count mismatch: %d vs %d", b->channels, info->channels);
+    }
+
+    // Write data
+    sf_count_t written;
+    switch(b->type) {
+        case RA_BUFFER_TYPE_SHORT:
+            written = sf_writef_short(snd->snd, b->data, b->real_size);
+            break;
+        case RA_BUFFER_TYPE_INT:
+            written = sf_writef_int(snd->snd, b->data, b->real_size);
+            break;
+        case RA_BUFFER_TYPE_FLOAT:
+            written = sf_writef_float(snd->snd, b->data, b->real_size);
+            break;
+        case RA_BUFFER_TYPE_DOUBLE:
+            written = sf_writef_double(snd->snd, b->data, b->real_size);
+            break;
+    }
+
+    return OFFT2NUM(written);
 }
 
 static VALUE ra_sound_close(VALUE self) {
