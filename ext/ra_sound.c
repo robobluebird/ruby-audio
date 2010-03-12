@@ -18,6 +18,7 @@ void Init_ra_sound() {
 /*** Initialization and Memory Manangement ***/
 static VALUE ra_sound_allocate(VALUE klass) {
     RA_SOUND *snd = ALLOC(RA_SOUND);
+    memset(snd, 0, sizeof(RA_SOUND));
     VALUE self = Data_Wrap_Struct(klass, ra_sound_mark, ra_sound_free, snd);
     return self;
 }
@@ -29,7 +30,7 @@ static void ra_sound_mark(RA_SOUND *snd) {
 }
 
 static void ra_sound_free(RA_SOUND *snd) {
-    if(!snd->closed) sf_close(snd->snd);
+    if(!snd->closed && snd->snd != NULL) sf_close(snd->snd);
     xfree(snd);
 }
 
@@ -143,6 +144,7 @@ static VALUE ra_sound_close(VALUE self) {
     if(snd->closed) rb_raise(eRubyAudioError, "closed sound");
 
     sf_close(snd->snd);
+    snd->snd = NULL;
     snd->closed = 1;
     return Qnil;
 }
