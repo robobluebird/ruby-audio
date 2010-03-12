@@ -2,8 +2,9 @@
 
 Gemified release of ruby/audio. ruby-audio wraps around libsndfile to provide
 simplified sound reading and writing support to ruby programs. The core is the
-Audio::Sound class, which is a subclass of NArray. Also provided is the
-Audio::Soundfile class, which is a wrapper around the wonderful libsndfile.
+RubyAudio::Sound class, which is a subclass of RubyAudio::CSound.
+RubyAudio::Buffer contains sound data and RubyAudio::SoundInfo contains
+information about the format of a sound file.
 
 == About This Release
 
@@ -17,11 +18,10 @@ Please contact me with any questions or comments.
 === Prerequisites
 
 - libsndfile[http://www.mega-nerd.com/libsndfile/]
-- SWIG[http://www.swig.org/]
 
 == License
 
-Copyright (C) 2010  Hans Fugal and Stephen Augenstein
+Copyright (C) 2010  Stephen Augenstein
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

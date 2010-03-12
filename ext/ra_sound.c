@@ -1,8 +1,13 @@
 #include "ra_sound.h"
 
-extern VALUE mRubyAudio, eRubyAudioError;
+extern VALUE eRubyAudioError;
 
+/*
+ * Class <code>CSound</code> is a very light wrapper around the
+ * <code>SNDFILE</code> struct exposed by libsndfile.
+ */
 void Init_ra_sound() {
+    VALUE mRubyAudio = rb_define_module("RubyAudio");
     VALUE cRASound = rb_define_class_under(mRubyAudio, "CSound", rb_cObject);
     rb_define_alloc_func(cRASound, ra_sound_allocate);
     rb_define_singleton_method(cRASound, "open", ra_sound_s_open, -1);
@@ -15,7 +20,6 @@ void Init_ra_sound() {
     rb_define_method(cRASound, "closed?", ra_sound_closed, 0);
 }
 
-/*** Initialization and Memory Manangement ***/
 static VALUE ra_sound_allocate(VALUE klass) {
     RA_SOUND *snd = ALLOC(RA_SOUND);
     memset(snd, 0, sizeof(RA_SOUND));
@@ -34,14 +38,31 @@ static void ra_sound_free(RA_SOUND *snd) {
     xfree(snd);
 }
 
-/*** Singleton Methods ***/
+/*
+ * call-seq:
+ *   CSound.open(...)                => snd
+ *   CSound.open(...) {|snd| block } => obj
+ *
+ * With no associated block, <code>open</code> is a synonym for
+ * <code>CSound.new</code>. If the optional code block is given, it will be
+ * passed <i>snd</i> as an argument, and the CSound object will automatically be
+ * closed when the block terminates. In this instance, <code>CSound.open</code>
+ * returns the value of the block.
+ */
 static VALUE ra_sound_s_open(int argc, VALUE *argv, VALUE klass) {
     VALUE obj = rb_class_new_instance(argc, argv, klass);
     if(!rb_block_given_p()) return obj;
     return rb_ensure(rb_yield, obj, ra_sound_close_safe, obj);
 }
 
-/*** Instance Methods ***/
+/*
+ * call-seq:
+ *   CSound.new(path, mode, info) => snd
+ *
+ * Returns a new <code>CSound</code> object for the audio file at the given path
+ * with the given mode. Valid modes are <code>"r"</code>, <code>"w"</code>, or
+ * <code>"rw"</code>.
+ */
 static VALUE ra_sound_init(VALUE self, VALUE path, VALUE mode, VALUE info) {
     RA_SOUND *snd;
     Data_Get_Struct(self, RA_SOUND, snd);
@@ -67,12 +88,32 @@ static VALUE ra_sound_init(VALUE self, VALUE path, VALUE mode, VALUE info) {
     return self;
 }
 
+/*
+ * call-seq:
+ *   snd.info => CSoundInfo
+ *
+ * Returns the info object associated with the sound.
+ */
 static VALUE ra_sound_info(VALUE self) {
     RA_SOUND *snd;
     Data_Get_Struct(self, RA_SOUND, snd);
     return snd->info;
 }
 
+/*
+ * call-seq:
+ *   snd.seek(frames, whence) => 0
+ *
+ * Seeks to a given offset <i>anInteger</i> in the sound according to the value
+ * of <i>whence</i>:
+ *
+ *   IO::SEEK_CUR  | Seeks to _frames_ plus current position
+ *   --------------+----------------------------------------------------
+ *   IO::SEEK_END  | Seeks to _frames_ plus end of stream (you probably
+ *                 | want a negative value for _frames_)
+ *   --------------+----------------------------------------------------
+ *   IO::SEEK_SET  | Seeks to the absolute location given by _frames_
+ */
 static VALUE ra_sound_seek(VALUE self, VALUE frames, VALUE whence) {
     RA_SOUND *snd;
     Data_Get_Struct(self, RA_SOUND, snd);
@@ -85,6 +126,13 @@ static VALUE ra_sound_seek(VALUE self, VALUE frames, VALUE whence) {
     return INT2FIX(0);
 }
 
+/*
+ * call-seq:
+ *   snd.read(buf, frames) => integer
+ *
+ * Tries to read the given number of frames into the buffer and returns the
+ * number of frames actually read.
+ */
 static VALUE ra_sound_read(VALUE self, VALUE buf, VALUE frames) {
     RA_SOUND *snd;
     Data_Get_Struct(self, RA_SOUND, snd);
@@ -130,6 +178,13 @@ static VALUE ra_sound_read(VALUE self, VALUE buf, VALUE frames) {
     return INT2FIX(b->real_size);
 }
 
+/*
+ * call-seq:
+ *   snd.write(buf) => integer
+ *
+ * Writes the entire contents of the given buffer to the sound and returns the
+ * number of frames written.
+ */
 static VALUE ra_sound_write(VALUE self, VALUE buf) {
     RA_SOUND *snd;
     Data_Get_Struct(self, RA_SOUND, snd);
@@ -168,6 +223,15 @@ static VALUE ra_sound_write(VALUE self, VALUE buf) {
     return OFFT2NUM(written);
 }
 
+/*
+ * call-seq:
+ *   snd.close => nil
+ *
+ * Closes <i>snd</i> and frees up all memory associated with the sound. The
+ * sound is unavailable for any further data operations; an error is raised if
+ * such an attempt is made. Sounds are automatically closed when they are claimed
+ * by the garbage collector.
+ */
 static VALUE ra_sound_close(VALUE self) {
     RA_SOUND *snd;
     Data_Get_Struct(self, RA_SOUND, snd);
@@ -183,6 +247,12 @@ static VALUE ra_sound_close_safe(VALUE self) {
     return rb_rescue(ra_sound_close, self, 0, 0);
 }
 
+/*
+ * call-seq:
+ *   snd.closed? => true or false
+ *
+ * Whether or not the current sound is closed to further operations.
+ */
 static VALUE ra_sound_closed(VALUE self) {
     RA_SOUND *snd;
     Data_Get_Struct(self, RA_SOUND, snd);

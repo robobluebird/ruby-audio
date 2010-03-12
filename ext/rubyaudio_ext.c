@@ -5,10 +5,19 @@ void Init_ra_buffer();
 void Init_ra_soundinfo();
 void Init_ra_sound();
 
-VALUE mRubyAudio, eRubyAudioError;
+VALUE eRubyAudioError;
 
+/*
+ * Document-module: RubyAudio
+ */
+/*
+ * Document-class: RubyAudio::Error
+ *
+ * Error class for RubyAudio
+ */
 void Init_rubyaudio_ext() {
-    mRubyAudio = rb_const_get(rb_cObject, rb_intern("RubyAudio"));
+    // Create RubyAudio module and other setup
+    VALUE mRubyAudio = rb_define_module("RubyAudio");
     eRubyAudioError = rb_define_class_under(mRubyAudio, "Error", rb_eStandardError);
 
     // Set up classes
@@ -17,7 +26,7 @@ void Init_rubyaudio_ext() {
     Init_ra_sound();
 
     // Export libsndfile constants
-    /* Major formats. */
+    // Major formats
     rb_define_const(mRubyAudio, "FORMAT_WAV", INT2FIX(SF_FORMAT_WAV));
     rb_define_const(mRubyAudio, "FORMAT_AIFF", INT2FIX(SF_FORMAT_AIFF));
     rb_define_const(mRubyAudio, "FORMAT_AU", INT2FIX(SF_FORMAT_AU));
@@ -44,7 +53,7 @@ void Init_rubyaudio_ext() {
     rb_define_const(mRubyAudio, "FORMAT_MPC2K", INT2FIX(SF_FORMAT_MPC2K));
     rb_define_const(mRubyAudio, "FORMAT_RF64", INT2FIX(SF_FORMAT_RF64));
 
-    /* Subtypes from here on. */
+    // Subtypes from here on
     rb_define_const(mRubyAudio, "FORMAT_PCM_S8", INT2FIX(SF_FORMAT_PCM_S8));
     rb_define_const(mRubyAudio, "FORMAT_PCM_16", INT2FIX(SF_FORMAT_PCM_16));
     rb_define_const(mRubyAudio, "FORMAT_PCM_24", INT2FIX(SF_FORMAT_PCM_24));
@@ -69,13 +78,13 @@ void Init_rubyaudio_ext() {
     rb_define_const(mRubyAudio, "FORMAT_DPCM_16", INT2FIX(SF_FORMAT_DPCM_16));
     rb_define_const(mRubyAudio, "FORMAT_VORBIS", INT2FIX(SF_FORMAT_VORBIS));
 
-    /* Endian-ness options. */
+    // Endian-ness options
     rb_define_const(mRubyAudio, "ENDIAN_FILE", INT2FIX(SF_ENDIAN_FILE));
     rb_define_const(mRubyAudio, "ENDIAN_LITTLE", INT2FIX(SF_ENDIAN_LITTLE));
     rb_define_const(mRubyAudio, "ENDIAN_BIG", INT2FIX(SF_ENDIAN_BIG));
     rb_define_const(mRubyAudio, "ENDIAN_CPU", INT2FIX(SF_ENDIAN_CPU));
 
-    /* Format masks */
+    // Format masks
     rb_define_const(mRubyAudio, "FORMAT_SUBMASK", INT2FIX(SF_FORMAT_SUBMASK));
     rb_define_const(mRubyAudio, "FORMAT_TYPEMASK", INT2FIX(SF_FORMAT_TYPEMASK));
     rb_define_const(mRubyAudio, "FORMAT_ENDMASK", INT2FIX(SF_FORMAT_ENDMASK));

@@ -1,9 +1,14 @@
 #include "ra_buffer.h"
 
 ID ra_short_sym, ra_int_sym, ra_float_sym, ra_double_sym;
-extern VALUE mRubyAudio, eRubyAudioError;
+extern VALUE eRubyAudioError;
 
+/*
+ * Class <code>CBuffer</code> is a very light wrapper around a standard C array
+ * that can be read from and written to by libsndfile.
+ */
 void Init_ra_buffer() {
+    VALUE mRubyAudio = rb_define_module("RubyAudio");
     VALUE cRABuffer = rb_define_class_under(mRubyAudio, "CBuffer", rb_cObject);
     rb_define_alloc_func(cRABuffer, ra_buffer_allocate);
     rb_define_method(cRABuffer, "initialize", ra_buffer_init, -1);
@@ -32,6 +37,15 @@ static void ra_buffer_free(RA_BUFFER *buf) {
     xfree(buf);
 }
 
+/*
+ * call-seq:
+ *   RubyAudio::CBuffer.new(type, size, channels=1) => buf
+ *
+ * Returns a new <code>CBuffer</code> object which can contain the given number
+ * of audio frames of the given data type.
+ *
+ *   buf = RubyAudio::CBuffer.new("float", 1000)
+ */
 static VALUE ra_buffer_init(int argc, VALUE *argv, VALUE self) {
     RA_BUFFER *buf;
     Data_Get_Struct(self, RA_BUFFER, buf);
@@ -80,24 +94,44 @@ static VALUE ra_buffer_init(int argc, VALUE *argv, VALUE self) {
     return self;
 }
 
+/*
+ * call-seq:
+ *   buf.channels => integer
+ *
+ * Returns the number of channels in a frame of the buffer.
+ */
 static VALUE ra_buffer_channels(VALUE self) {
     RA_BUFFER *buf;
     Data_Get_Struct(self, RA_BUFFER, buf);
     return INT2FIX(buf->channels);
 }
 
+/*
+ * call-seq:
+ *   buf.size => integer
+ *
+ * Returns the number of frames the buffer can store.
+ */
 static VALUE ra_buffer_size(VALUE self) {
     RA_BUFFER *buf;
     Data_Get_Struct(self, RA_BUFFER, buf);
     return INT2FIX(buf->size);
 }
 
+/*
+ * call-seq:
+ *   buf.real_size => integer
+ *
+ * Returns the number of frames of actual data are currently stored in the
+ * buffer.
+ */
 static VALUE ra_buffer_real_size(VALUE self) {
     RA_BUFFER *buf;
     Data_Get_Struct(self, RA_BUFFER, buf);
     return INT2FIX(buf->real_size);
 }
 
+/*:nodoc:*/
 static VALUE ra_buffer_real_size_set(VALUE self, VALUE real_size) {
     RA_BUFFER *buf;
     Data_Get_Struct(self, RA_BUFFER, buf);
@@ -111,9 +145,16 @@ static VALUE ra_buffer_real_size_set(VALUE self, VALUE real_size) {
         buf->real_size = new_real_size;
     }
 
-    return self;
+    return INT2FIX(buf->real_size);
 }
 
+/*
+ * call-seq:
+ *   buf.type => symbol
+ *
+ * Returns the type of audio data being stored. <code>:short</code>,
+ * <code>:int</code>, <code>:float</code>, or <code>:double</code>.
+ */
 static VALUE ra_buffer_type(VALUE self) {
     RA_BUFFER *buf;
     Data_Get_Struct(self, RA_BUFFER, buf);
@@ -125,6 +166,17 @@ static VALUE ra_buffer_type(VALUE self) {
     }
 }
 
+/*
+ * call-seq:
+ *   buf[integer] => frame
+ *
+ * Returns a frame of audio data at the given offset.
+ *
+ *   buf = snd.read(:float, 100)     # Mono sound
+ *   buf[5]                          #=> 0.4
+ *   buf2 = snd2.read(:float, 100)   # Stereo sound
+ *   buf[5]                          #=> [0.4, 0.3]
+ */
 static VALUE ra_buffer_aref(VALUE self, VALUE index) {
     RA_BUFFER *buf;
     Data_Get_Struct(self, RA_BUFFER, buf);
