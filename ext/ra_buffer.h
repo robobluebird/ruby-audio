@@ -1,3 +1,6 @@
+#ifndef RA_BUFFER_H
+#define RA_BUFFER_H
+
 #include <ruby.h>
 
 typedef enum {
@@ -15,7 +18,7 @@ typedef struct {
     int channels;
 } RA_BUFFER;
 
-void Init_ra_buffer(VALUE mBase);
+void Init_ra_buffer();
 
 /*** Initialization and Memory Manangement ***/
 static VALUE ra_buffer_allocate(VALUE klass);
@@ -28,3 +31,5 @@ static VALUE ra_buffer_size(VALUE self);
 static VALUE ra_buffer_real_size(VALUE self);
 static VALUE ra_buffer_real_size_set(VALUE self, VALUE new_real_size);
 static VALUE ra_buffer_type(VALUE self);
+
+#endif        //  #ifndef RA_BUFFER_H

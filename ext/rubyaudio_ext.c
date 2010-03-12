@@ -1,15 +1,20 @@
 #include <ruby.h>
 #include <sndfile.h>
 
-void Init_ra_buffer(VALUE mBase);
-void Init_ra_soundinfo(VALUE mBase);
+void Init_ra_buffer();
+void Init_ra_soundinfo();
+void Init_ra_sound();
+
+VALUE mRubyAudio, eRubyAudioError;
 
 void Init_rubyaudio_ext() {
-    VALUE mRubyAudio = rb_const_get(rb_cObject, rb_intern("RubyAudio"));
+    mRubyAudio = rb_const_get(rb_cObject, rb_intern("RubyAudio"));
+    eRubyAudioError = rb_define_class_under(mRubyAudio, "Error", rb_eStandardError);
 
     // Set up classes
-    Init_ra_buffer(mRubyAudio);
-    Init_ra_soundinfo(mRubyAudio);
+    Init_ra_buffer();
+    Init_ra_soundinfo();
+    Init_ra_sound();
 
     // Export libsndfile constants
     /* Major formats. */

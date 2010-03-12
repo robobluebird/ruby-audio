@@ -1,7 +1,10 @@
+#ifndef RA_SOUNDINFO_H
+#define RA_SOUNDINFO_H
+
 #include <ruby.h>
 #include <sndfile.h>
 
-void Init_ra_soundinfo(VALUE mBase);
+void Init_ra_soundinfo();
 
 /*** Initialization and Memory Manangement ***/
 static VALUE ra_soundinfo_allocate(VALUE klass);
@@ -18,3 +21,5 @@ static VALUE ra_soundinfo_format(VALUE self);
 static VALUE ra_soundinfo_format_set(VALUE self, VALUE new_format);
 static VALUE ra_soundinfo_sections(VALUE self);
 static VALUE ra_soundinfo_seekable(VALUE self);
+
+#endif        //  #ifndef RA_SOUNDINFO_H

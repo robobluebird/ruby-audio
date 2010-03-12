@@ -1,9 +1,10 @@
 #include "ra_buffer.h"
 
 ID ra_short_sym, ra_int_sym, ra_float_sym, ra_double_sym;
+extern VALUE mRubyAudio, eRubyAudioError;
 
-void Init_ra_buffer(VALUE mBase) {
-    VALUE cRABuffer = rb_define_class_under(mBase, "CBuffer", rb_cObject);
+void Init_ra_buffer() {
+    VALUE cRABuffer = rb_define_class_under(mRubyAudio, "CBuffer", rb_cObject);
     rb_define_alloc_func(cRABuffer, ra_buffer_allocate);
     rb_define_method(cRABuffer, "initialize", ra_buffer_init, -1);
     rb_define_method(cRABuffer, "channels",   ra_buffer_channels, 0);
@@ -29,18 +30,16 @@ static VALUE ra_buffer_allocate(VALUE klass) {
 }
 
 static void ra_buffer_free(RA_BUFFER *buf) {
-    if(buf->data != NULL) free(buf->data);
-    free(buf);
+    if(buf->data != NULL) xfree(buf->data);
+    xfree(buf);
 }
 
 static VALUE ra_buffer_init(int argc, VALUE *argv, VALUE self) {
     RA_BUFFER *buf;
+    Data_Get_Struct(self, RA_BUFFER, buf);
 
     // Check args
     if(argc < 2) rb_raise(rb_eArgError, "At least 2 arguments required");
-
-    // Get struct
-    Data_Get_Struct(self, RA_BUFFER, buf);
 
     // Get type of object
     const char *buf_type;
@@ -57,27 +56,27 @@ static VALUE ra_buffer_init(int argc, VALUE *argv, VALUE self) {
             break;
     }
 
+    // Populate channels
+    buf->channels = (argc == 3) ? FIX2INT(argv[2]) : 1;
+
     // Allocate data array based on type
     buf->size = FIX2INT(argv[1]);
+    buf->real_size = 0;
     if(strcmp(buf_type, "short") == 0) {
         buf->type = RA_BUFFER_TYPE_SHORT;
-        buf->data = ALLOC_N(short, buf->size);
+        buf->data = ALLOC_N(short, buf->size * buf->channels);
     } else if(strcmp(buf_type, "int") == 0) {
         buf->type = RA_BUFFER_TYPE_INT;
-        buf->data = ALLOC_N(int, buf->size);
+        buf->data = ALLOC_N(int, buf->size * buf->channels);
     } else if(strcmp(buf_type, "float") == 0) {
         buf->type = RA_BUFFER_TYPE_FLOAT;
-        buf->data = ALLOC_N(float, buf->size);
+        buf->data = ALLOC_N(float, buf->size * buf->channels);
     } else if(strcmp(buf_type, "double") == 0) {
         buf->type = RA_BUFFER_TYPE_DOUBLE;
-        buf->data = ALLOC_N(double, buf->size);
+        buf->data = ALLOC_N(double, buf->size * buf->channels);
     } else {
         rb_raise(rb_eArgError, "Invalid type: %s", buf_type);
     }
-
-    // Finish population
-    buf->real_size = 0;
-    buf->channels = (argc == 3) ? FIX2INT(argv[2]) : 1;
 
     // Return self
     return self;

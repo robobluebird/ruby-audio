@@ -1,7 +1,9 @@
 #include "ra_soundinfo.h"
 
-void Init_ra_soundinfo(VALUE mBase) {
-    VALUE cRASoundInfo = rb_define_class_under(mBase, "CSoundInfo", rb_cObject);
+extern VALUE mRubyAudio, eRubyAudioError;
+
+void Init_ra_soundinfo() {
+    VALUE cRASoundInfo = rb_define_class_under(mRubyAudio, "CSoundInfo", rb_cObject);
     rb_define_alloc_func(cRASoundInfo, ra_soundinfo_allocate);
     rb_define_method(cRASoundInfo, "valid?",      ra_soundinfo_valid, 0);
     rb_define_method(cRASoundInfo, "frames",      ra_soundinfo_frames, 0);
@@ -23,8 +25,8 @@ static VALUE ra_soundinfo_allocate(VALUE klass) {
     return self;
 }
 
-static void  ra_soundinfo_free(SF_INFO *info) {
-    free(info);
+static void ra_soundinfo_free(SF_INFO *info) {
+    xfree(info);
 }
 
 /*** Instance Methods ***/
