@@ -12,10 +12,7 @@ void Init_ra_buffer() {
     rb_define_method(cRABuffer, "real_size",  ra_buffer_real_size, 0);
     rb_define_method(cRABuffer, "real_size=", ra_buffer_real_size_set, 1);
     rb_define_method(cRABuffer, "type",       ra_buffer_type, 0);
-    /*
-    rb_define_method(rb_cString, "[]", rb_str_aref_m, -1);
-    rb_define_method(rb_cString, "[]=", rb_str_aset_m, -1);
-    */
+    rb_define_method(cRABuffer, "[]",         ra_buffer_aref, 1);
 
     ra_short_sym = rb_intern("short");
     ra_int_sym = rb_intern("int");
@@ -25,6 +22,7 @@ void Init_ra_buffer() {
 
 static VALUE ra_buffer_allocate(VALUE klass) {
     RA_BUFFER *buf = ALLOC(RA_BUFFER);
+    memset(buf, 0, sizeof(RA_BUFFER));
     VALUE self = Data_Wrap_Struct(klass, NULL, ra_buffer_free, buf);
     return self;
 }
@@ -124,5 +122,34 @@ static VALUE ra_buffer_type(VALUE self) {
         case RA_BUFFER_TYPE_INT: return ID2SYM(ra_int_sym);
         case RA_BUFFER_TYPE_FLOAT: return ID2SYM(ra_float_sym);
         case RA_BUFFER_TYPE_DOUBLE: return ID2SYM(ra_double_sym);
+    }
+}
+
+static VALUE ra_buffer_aref(VALUE self, VALUE index) {
+    RA_BUFFER *buf;
+    Data_Get_Struct(self, RA_BUFFER, buf);
+
+    // Bounds check
+    int i = FIX2INT(index);
+    if(i < 0 || i >= buf->real_size) return Qnil;
+
+    if(buf->channels == 1) {
+        return ra_buffer_data_index(buf, i);
+    } else {
+        VALUE frame = rb_ary_new();
+        int j;
+        for(j = 0; j < buf->channels; j++) {
+            rb_ary_push(frame, ra_buffer_data_index(buf, i+j));
+        }
+        return frame;
+    }
+}
+
+static VALUE ra_buffer_data_index(RA_BUFFER *buf, int i) {
+    switch(buf->type) {
+        case RA_BUFFER_TYPE_SHORT: return INT2FIX((int)((short*)buf->data)[i]);
+        case RA_BUFFER_TYPE_INT: return INT2FIX(((int*)buf->data)[i]);
+        case RA_BUFFER_TYPE_FLOAT: return rb_float_new((double)((float*)buf->data)[i]);
+        case RA_BUFFER_TYPE_DOUBLE: return rb_float_new(((double*)buf->data)[i]);
     }
 }

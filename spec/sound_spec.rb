@@ -50,7 +50,9 @@ describe RubyAudio::Sound do
   it "should allow seeking" do
     lambda {
       RubyAudio::Sound.open(MONO_TEST_WAV) do |snd|
-        snd.seek(50)
+        snd.seek(100)
+        buf = snd.read(:float, 100)
+        buf[0].should > 0
       end
     }.should_not raise_error
   end
@@ -65,10 +67,11 @@ describe RubyAudio::Sound do
   end
 
   it "should allow reading samples from the sound" do
-    RubyAudio::Sound.open(MONO_TEST_WAV) do |snd|
+    RubyAudio::Sound.open(STEREO_TEST_WAV) do |snd|
       buf = snd.read(:float, 1000)
       buf.size.should == 1000
       buf.real_size.should == 1000
+      buf[999].length.should == 2
     end
   end
 
@@ -79,6 +82,7 @@ describe RubyAudio::Sound do
       snd.read(buf)
     end
     buf.real_size.should == 1000
+    buf[99].should > 0
   end
 
   it "should allow reading into an existing buffer partially" do
@@ -88,6 +92,8 @@ describe RubyAudio::Sound do
       snd.read(buf, 100)
     end
     buf.real_size.should == 100
+    buf[99].should > 0
+    buf[100].should == nil
   end
 
   it "should raise exception for channel count mismatch on read" do
