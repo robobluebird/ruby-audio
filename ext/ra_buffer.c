@@ -3,6 +3,11 @@
 ID ra_short_sym, ra_int_sym, ra_float_sym, ra_double_sym;
 extern VALUE eRubyAudioError;
 
+// Before RFLOAT_VALUE, value was in a different place in the struct
+#ifndef RFLOAT_VALUE
+#define RFLOAT_VALUE(v) (RFLOAT(v)->value)
+#endif
+
 /*
  * Class <code>CBuffer</code> is a very light wrapper around a standard C array
  * that can be read from and written to by libsndfile.
@@ -18,6 +23,7 @@ void Init_ra_buffer() {
     rb_define_method(cRABuffer, "real_size=", ra_buffer_real_size_set, 1);
     rb_define_method(cRABuffer, "type",       ra_buffer_type, 0);
     rb_define_method(cRABuffer, "[]",         ra_buffer_aref, 1);
+    rb_define_method(cRABuffer, "[]=",        ra_buffer_aset, 2);
 
     ra_short_sym = rb_intern("short");
     ra_int_sym = rb_intern("int");
@@ -174,6 +180,7 @@ static VALUE ra_buffer_type(VALUE self) {
  *
  *   buf = snd.read(:float, 100)     # Mono sound
  *   buf[5]                          #=> 0.4
+ *
  *   buf2 = snd2.read(:float, 100)   # Stereo sound
  *   buf[5]                          #=> [0.4, 0.3]
  */
@@ -182,26 +189,89 @@ static VALUE ra_buffer_aref(VALUE self, VALUE index) {
     Data_Get_Struct(self, RA_BUFFER, buf);
 
     // Bounds check
-    int i = FIX2INT(index);
-    if(i < 0 || i >= buf->real_size) return Qnil;
+    int f = FIX2INT(index);
+    if(f < 0 || f >= buf->real_size) return Qnil;
+    int i = f * buf->channels;
 
     if(buf->channels == 1) {
-        return ra_buffer_data_index(buf, i);
+        return ra_buffer_index_get(buf, i);
     } else {
         VALUE frame = rb_ary_new();
         int j;
         for(j = 0; j < buf->channels; j++) {
-            rb_ary_push(frame, ra_buffer_data_index(buf, i+j));
+            rb_ary_push(frame, ra_buffer_index_get(buf, i+j));
         }
         return frame;
     }
 }
 
-static VALUE ra_buffer_data_index(RA_BUFFER *buf, int i) {
+static VALUE ra_buffer_index_get(RA_BUFFER *buf, int i) {
     switch(buf->type) {
         case RA_BUFFER_TYPE_SHORT: return INT2FIX((int)((short*)buf->data)[i]);
         case RA_BUFFER_TYPE_INT: return INT2FIX(((int*)buf->data)[i]);
         case RA_BUFFER_TYPE_FLOAT: return rb_float_new((double)((float*)buf->data)[i]);
         case RA_BUFFER_TYPE_DOUBLE: return rb_float_new(((double*)buf->data)[i]);
+    }
+}
+
+/*
+ * call-seq:
+ *   buf[integer] = numeric => numeric
+ *   buf[integer] = array => array
+ *
+ * Sets the frame of audio data at the given offset to the value. For
+ * multi-channel audio, pass in an array of values.
+ *
+ *   buf = RubyAudio::Buffer.int(100, 1)
+ *   buf[0] = 5
+ *
+ *   buf = RubyAudio::Buffer.double(100, 2)
+ *   buf[0] = [0.5, 0.3]
+ */
+static VALUE ra_buffer_aset(VALUE self, VALUE index, VALUE val) {
+    RA_BUFFER *buf;
+    Data_Get_Struct(self, RA_BUFFER, buf);
+
+    // Bounds check
+    int f = FIX2INT(index);
+    if(f < 0 || f >= buf->size) rb_raise(eRubyAudioError, "setting frame out of bounds");
+    int i = f * buf->channels;
+
+    // Set data
+    if(buf->channels == 1) {
+        ra_buffer_index_set(buf, i, val);
+    } else {
+        if(TYPE(val) != T_ARRAY) rb_raise(eRubyAudioError, "must pass in array for multi-channel buffer");
+        long length = RARRAY_LEN(val);
+        if(length != buf->channels) rb_raise(eRubyAudioError, "array length must match channel count");
+
+        int j;
+        for(j = 0; j < length; j++) {
+            ra_buffer_index_set(buf, i+j, rb_ary_entry(val, j));
+        }
+    }
+
+    // Bump real_size
+    if(f + 1 > buf->real_size) {
+        buf->real_size = f + 1;
+    }
+
+    return val;
+}
+
+static void ra_buffer_index_set(RA_BUFFER *buf, int i, VALUE val) {
+    switch(buf->type) {
+        case RA_BUFFER_TYPE_SHORT:
+            ((short*)buf->data)[i] = (short)FIX2INT(val);
+            break;
+        case RA_BUFFER_TYPE_INT:
+            ((int*)buf->data)[i] = FIX2INT(val);
+            break;
+        case RA_BUFFER_TYPE_FLOAT:
+            ((float*)buf->data)[i] = (float)RFLOAT_VALUE(val);
+            break;
+        case RA_BUFFER_TYPE_DOUBLE:
+            ((double*)buf->data)[i] = RFLOAT_VALUE(val);
+            break;
     }
 }
