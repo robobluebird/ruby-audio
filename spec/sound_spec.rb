@@ -126,4 +126,22 @@ describe RubyAudio::Sound do
 
     out_buf[50].should == in_buf[50]
   end
+
+  it "should allow writing to a new sound using <<" do
+    in_buf = RubyAudio::Buffer.float(100)
+    out_buf = RubyAudio::Buffer.float(100)
+    out_info = nil
+    RubyAudio::Sound.open(MONO_TEST_WAV) do |snd|
+      snd.read(in_buf)
+      out_info = snd.info.clone
+    end
+
+    RubyAudio::Sound.open(OUT_WAV, 'rw', out_info) do |snd|
+      snd << in_buf
+      snd.seek(0)
+      snd.read(out_buf)
+    end
+
+    out_buf[50].should == in_buf[50]
+  end
 end

@@ -16,6 +16,7 @@ void Init_ra_sound() {
     rb_define_method(cRASound, "seek", ra_sound_seek, 2);
     rb_define_method(cRASound, "read", ra_sound_read, 2);
     rb_define_method(cRASound, "write", ra_sound_write, 1);
+    rb_define_method(cRASound, "<<", ra_sound_addbuf, 1);
     rb_define_method(cRASound, "close", ra_sound_close, 0);
     rb_define_method(cRASound, "closed?", ra_sound_closed, 0);
 }
@@ -221,6 +222,19 @@ static VALUE ra_sound_write(VALUE self, VALUE buf) {
     }
 
     return OFFT2NUM(written);
+}
+
+/*
+ * call-seq:
+ *   snd << buf => snd
+ *
+ * Writes the given buffer to the string.
+ *
+ *   snd << buf1 << buf2
+ */
+static VALUE ra_sound_addbuf(VALUE self, VALUE buf) {
+    ra_sound_write(self, buf);
+    return self;
 }
 
 /*

@@ -29,6 +29,7 @@ static VALUE ra_sound_info(VALUE self);
 static VALUE ra_sound_seek(VALUE self, VALUE frames, VALUE whence);
 static VALUE ra_sound_read(VALUE self, VALUE buf, VALUE frames);
 static VALUE ra_sound_write(VALUE self, VALUE buf);
+static VALUE ra_sound_addbuf(VALUE self, VALUE buf);
 static VALUE ra_sound_close(VALUE self);
 static VALUE ra_sound_close_safe(VALUE self);
 static VALUE ra_sound_closed(VALUE self);
