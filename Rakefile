@@ -12,12 +12,12 @@ spec = Gem::Specification.new do |s|
   s.email    = 'perl.programmer@gmail.com'
   s.homepage = 'http://github.com/warhammerkid/ruby-audio'
 
-  s.platform     = Gem::Platform::RUBY
-  s.has_rdoc     = true
-  s.files        = FileList['README.rdoc', 'Rakefile', 'LICENSE', 'lib/**/*.rb', 'spec/**/*.{rb,opts,wav,mp3}', 'ext/extconf.rb', 'ext/*.{c,h}']
-  s.require_path = 'lib'
-  s.extensions   = ["ext/extconf.rb"]
-  s.test_files   = Dir[*['spec/**/*_spec.rb']]
+  s.platform      = Gem::Platform::RUBY
+  s.rdoc_options  << '--line-numbers' << '--main' << 'README.rdoc'
+  s.rdoc_options  += FileList['ext/**/*.c', 'README.rdoc']
+  s.files         = FileList['README.rdoc', 'Rakefile', 'LICENSE', 'lib/**/*.rb', 'spec/**/*.{rb,opts,wav,mp3}', 'ext/extconf.rb', 'ext/*.{c,h}']
+  s.extensions    = ["ext/extconf.rb"]
+  s.test_files    = Dir[*['spec/**/*_spec.rb']]
 
   s.requirements << 'libsndfile (http://www.mega-nerd.com/libsndfile/)'
 end
@@ -26,19 +26,14 @@ desc 'Default: Run the tests'
 task :default => :spec
 
 # Rake gem & package routines
-Rake::GemPackageTask.new spec do |pkg|
-  pkg.need_tar = true
-  pkg.need_zip = true
-end
+Rake::GemPackageTask.new(spec).define
 
 desc "Generate documentation"
 Rake::RDocTask.new(:rdoc) do |rdoc|
   rdoc.rdoc_dir = 'rdoc'
   rdoc.title    = 'ruby-audio'
-  rdoc.options << '--line-numbers' << '--main' << 'README.rdoc'
-  rdoc.rdoc_files.include('README.rdoc')
+  rdoc.options  = spec.rdoc_options
   rdoc.rdoc_files.include('lib/**/*.rb')
-  rdoc.rdoc_files.include('ext/**/*.c')
 end
 
 Spec::Rake::SpecTask.new do |t|
