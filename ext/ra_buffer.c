@@ -16,14 +16,15 @@ void Init_ra_buffer() {
     VALUE mRubyAudio = rb_define_module("RubyAudio");
     VALUE cRABuffer = rb_define_class_under(mRubyAudio, "CBuffer", rb_cObject);
     rb_define_alloc_func(cRABuffer, ra_buffer_allocate);
-    rb_define_method(cRABuffer, "initialize", ra_buffer_init, -1);
-    rb_define_method(cRABuffer, "channels",   ra_buffer_channels, 0);
-    rb_define_method(cRABuffer, "size",       ra_buffer_size, 0);
-    rb_define_method(cRABuffer, "real_size",  ra_buffer_real_size, 0);
-    rb_define_method(cRABuffer, "real_size=", ra_buffer_real_size_set, 1);
-    rb_define_method(cRABuffer, "type",       ra_buffer_type, 0);
-    rb_define_method(cRABuffer, "[]",         ra_buffer_aref, 1);
-    rb_define_method(cRABuffer, "[]=",        ra_buffer_aset, 2);
+    rb_define_method(cRABuffer, "initialize",      ra_buffer_init, -1);
+    rb_define_method(cRABuffer, "initialize_copy", ra_buffer_init_copy, 1);
+    rb_define_method(cRABuffer, "channels",        ra_buffer_channels, 0);
+    rb_define_method(cRABuffer, "size",            ra_buffer_size, 0);
+    rb_define_method(cRABuffer, "real_size",       ra_buffer_real_size, 0);
+    rb_define_method(cRABuffer, "real_size=",      ra_buffer_real_size_set, 1);
+    rb_define_method(cRABuffer, "type",            ra_buffer_type, 0);
+    rb_define_method(cRABuffer, "[]",              ra_buffer_aref, 1);
+    rb_define_method(cRABuffer, "[]=",             ra_buffer_aset, 2);
 
     ra_short_sym = rb_intern("short");
     ra_int_sym = rb_intern("int");
@@ -41,6 +42,22 @@ static VALUE ra_buffer_allocate(VALUE klass) {
 static void ra_buffer_free(RA_BUFFER *buf) {
     if(buf->data != NULL) xfree(buf->data);
     xfree(buf);
+}
+
+/*
+ * Uses size, channels, and type to allocate a properly sized array and set data
+ * to the pointer for that data. Returns size.
+ */
+static int ra_buffer_alloc_data(RA_BUFFER *buf) {
+    int size;
+    switch(buf->type) {
+        case RA_BUFFER_TYPE_SHORT: size = sizeof(short)*buf->size*buf->channels; break;
+        case RA_BUFFER_TYPE_INT: size = sizeof(int)*buf->size*buf->channels; break;
+        case RA_BUFFER_TYPE_FLOAT: size = sizeof(float)*buf->size*buf->channels; break;
+        case RA_BUFFER_TYPE_DOUBLE: size = sizeof(double)*buf->size*buf->channels; break;
+    }
+    buf->data = (void*)xmalloc(size);
+    return size;
 }
 
 /*
@@ -80,24 +97,37 @@ static VALUE ra_buffer_init(int argc, VALUE *argv, VALUE self) {
     // Allocate data array based on type
     buf->size = FIX2INT(argv[1]);
     buf->real_size = 0;
-    if(strcmp(buf_type, "short") == 0) {
-        buf->type = RA_BUFFER_TYPE_SHORT;
-        buf->data = ALLOC_N(short, buf->size * buf->channels);
-    } else if(strcmp(buf_type, "int") == 0) {
-        buf->type = RA_BUFFER_TYPE_INT;
-        buf->data = ALLOC_N(int, buf->size * buf->channels);
-    } else if(strcmp(buf_type, "float") == 0) {
-        buf->type = RA_BUFFER_TYPE_FLOAT;
-        buf->data = ALLOC_N(float, buf->size * buf->channels);
-    } else if(strcmp(buf_type, "double") == 0) {
-        buf->type = RA_BUFFER_TYPE_DOUBLE;
-        buf->data = ALLOC_N(double, buf->size * buf->channels);
-    } else {
-        rb_raise(rb_eArgError, "Invalid type: %s", buf_type);
-    }
+    if(strcmp(buf_type, "short") == 0) buf->type = RA_BUFFER_TYPE_SHORT;
+    else if(strcmp(buf_type, "int") == 0) buf->type = RA_BUFFER_TYPE_INT;
+    else if(strcmp(buf_type, "float") == 0) buf->type = RA_BUFFER_TYPE_FLOAT;
+    else if(strcmp(buf_type, "double") == 0) buf->type = RA_BUFFER_TYPE_DOUBLE;
+    else rb_raise(rb_eArgError, "Invalid type: %s", buf_type);
+    ra_buffer_alloc_data(buf);
 
     // Return self
     return self;
+}
+
+/* :nodoc: */
+static VALUE ra_buffer_init_copy(VALUE copy, VALUE buf) {
+    if (copy == buf) return copy;
+
+    // Checks
+    rb_check_frozen(copy);
+    if (!rb_obj_is_instance_of(buf, rb_obj_class(copy))) {
+        rb_raise(rb_eTypeError, "wrong argument class");
+    }
+
+    RA_BUFFER *copy_struct, *buf_struct;
+    Data_Get_Struct(copy, RA_BUFFER, copy_struct);
+    Data_Get_Struct(buf, RA_BUFFER, buf_struct);
+
+    // Clone data
+    memcpy(copy_struct, buf_struct, sizeof(RA_BUFFER));
+    int size = ra_buffer_alloc_data(copy_struct);
+    memcpy(copy_struct->data, buf_struct->data, size);
+
+    return copy;
 }
 
 /*

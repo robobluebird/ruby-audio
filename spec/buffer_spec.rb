@@ -47,4 +47,16 @@ describe RubyAudio::Buffer do
     buf.real_size = 101
     buf.real_size.should == 100
   end
+
+  it "should support cloning/duping" do
+    buf = RubyAudio::Buffer.int(100)
+    buf[4] = 100
+
+    buf2 = buf.dup
+    buf2.size.should == buf.size
+    buf2[4].should == 100
+
+    buf[4] = 140
+    buf2[4].should == 100
+  end
 end

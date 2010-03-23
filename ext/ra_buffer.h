@@ -26,6 +26,7 @@ static void  ra_buffer_free(RA_BUFFER *buf);
 
 /*** Instance Methods ***/
 static VALUE ra_buffer_init(int argc, VALUE *argv, VALUE self);
+static VALUE ra_buffer_init_copy(VALUE copy, VALUE buf);
 static VALUE ra_buffer_channels(VALUE self);
 static VALUE ra_buffer_size(VALUE self);
 static VALUE ra_buffer_real_size(VALUE self);
