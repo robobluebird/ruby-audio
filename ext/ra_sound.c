@@ -131,6 +131,7 @@ static void ra_sound_read_short(RA_SOUND *snd, RA_BUFFER *buf, sf_count_t frames
     static short temp[1024];
     int temp_len = 1024;
     short *data = (short*)buf->data;
+    short mix_sum;
 
     // Get info struct
     SF_INFO *info;
@@ -143,7 +144,7 @@ static void ra_sound_read_short(RA_SOUND *snd, RA_BUFFER *buf, sf_count_t frames
         read = sf_readf_short(snd->snd, data, frames);
     } else if(buf->channels == 1) { // Downmix to mono
         sf_count_t max = temp_len / info->channels;
-        int channels, mix_sum;
+        int channels;
 
         while(read < frames) {
             // Calculate # of frames to read
@@ -189,6 +190,7 @@ static void ra_sound_read_int(RA_SOUND *snd, RA_BUFFER *buf, sf_count_t frames) 
     static int temp[1024];
     int temp_len = 1024;
     int *data = (int*)buf->data;
+    int mix_sum;
 
     // Get info struct
     SF_INFO *info;
@@ -201,7 +203,7 @@ static void ra_sound_read_int(RA_SOUND *snd, RA_BUFFER *buf, sf_count_t frames) 
         read = sf_readf_int(snd->snd, data, frames);
     } else if(buf->channels == 1) { // Downmix to mono
         sf_count_t max = temp_len / info->channels;
-        int channels, mix_sum;
+        int channels;
 
         while(read < frames) {
             // Calculate # of frames to read
@@ -247,6 +249,7 @@ static void ra_sound_read_float(RA_SOUND *snd, RA_BUFFER *buf, sf_count_t frames
     static float temp[1024];
     int temp_len = 1024;
     float *data = (float*)buf->data;
+    float mix_sum;
 
     // Get info struct
     SF_INFO *info;
@@ -259,7 +262,7 @@ static void ra_sound_read_float(RA_SOUND *snd, RA_BUFFER *buf, sf_count_t frames
         read = sf_readf_float(snd->snd, data, frames);
     } else if(buf->channels == 1) { // Downmix to mono
         sf_count_t max = temp_len / info->channels;
-        int channels, mix_sum;
+        int channels;
 
         while(read < frames) {
             // Calculate # of frames to read
@@ -305,6 +308,7 @@ static void ra_sound_read_double(RA_SOUND *snd, RA_BUFFER *buf, sf_count_t frame
     static double temp[1024];
     int temp_len = 1024;
     double *data = (double*)buf->data;
+    double mix_sum;
 
     // Get info struct
     SF_INFO *info;
@@ -317,7 +321,7 @@ static void ra_sound_read_double(RA_SOUND *snd, RA_BUFFER *buf, sf_count_t frame
         read = sf_readf_double(snd->snd, data, frames);
     } else if(buf->channels == 1) { // Downmix to mono
         sf_count_t max = temp_len / info->channels;
-        int channels, mix_sum;
+        int channels;
 
         while(read < frames) {
             // Calculate # of frames to read
