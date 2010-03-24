@@ -100,13 +100,38 @@ describe RubyAudio::Sound do
     buf[100].should == nil
   end
 
-  it "should raise exception for channel count mismatch on read" do
-    buf = RubyAudio::Buffer.float(1000, 1)
+  it "should allow downmixing to mono on read" do
+    buf = RubyAudio::Buffer.int(100, 1)
+    buf2 = RubyAudio::Buffer.int(100, 2)
+    RubyAudio::Sound.open(STEREO_TEST_WAV, 'r') do |snd|
+      snd.read(buf)
+      snd.seek(0)
+      snd.read(buf2)
+
+      f = buf2[99]
+      buf[99].should == (f[0] + f[1]) / 2
+    end
+  end
+
+  it "should allow upmixing from mono on read" do
+    buf = RubyAudio::Buffer.int(100, 1)
+    buf2 = RubyAudio::Buffer.int(100, 2)
+    RubyAudio::Sound.open(STEREO_TEST_WAV, 'r') do |snd|
+      snd.read(buf2)
+      snd.seek(0)
+      snd.read(buf)
+
+      buf2[99].should == [buf[99], buf[99]]
+    end
+  end
+
+  it "should fail read on unsupported up/downmixing" do
+    buf = RubyAudio::Buffer.float(100, 5)
     lambda {
       RubyAudio::Sound.open(STEREO_TEST_WAV) do |snd|
         snd.read(buf)
       end
-    }.should raise_error(RubyAudio::Error, "channel count mismatch: 1 vs 2")
+    }.should raise_error(RubyAudio::Error, "unsupported mix from 5 to 2")
   end
 
   it "should allow writing to a new sound" do
@@ -143,5 +168,15 @@ describe RubyAudio::Sound do
     end
 
     out_buf[50].should == in_buf[50]
+  end
+
+  it "should fail write on channel mismatch" do
+    buf = RubyAudio::Buffer.float(100, 5)
+    info = RubyAudio::SoundInfo.new :channels => 2, :samplerate => 48000, :format => RubyAudio::FORMAT_WAV|RubyAudio::FORMAT_PCM_16
+    lambda {
+      RubyAudio::Sound.open(OUT_WAV, 'w', info) do |snd|
+        snd.write(buf)
+      end
+    }.should raise_error(RubyAudio::Error, "channel count mismatch: 5 vs 2")
   end
 end

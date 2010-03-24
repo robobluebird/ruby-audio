@@ -127,6 +127,238 @@ static VALUE ra_sound_seek(VALUE self, VALUE frames, VALUE whence) {
     return INT2FIX(0);
 }
 
+static void ra_sound_read_short(RA_SOUND *snd, RA_BUFFER *buf, sf_count_t frames) {
+    static short temp[1024];
+    int temp_len = 1024;
+    short *data = (short*)buf->data;
+
+    // Get info struct
+    SF_INFO *info;
+    Data_Get_Struct(snd->info, SF_INFO, info);
+
+    // Up/Downmix based on channel matching
+    sf_count_t read = 0, r, amount;
+    int i, k;
+    if(buf->channels == info->channels) { // Simply read data without mix
+        read = sf_readf_short(snd->snd, data, frames);
+    } else if(buf->channels == 1) { // Downmix to mono
+        sf_count_t max = temp_len / info->channels;
+        int channels, mix_sum;
+
+        while(read < frames) {
+            // Calculate # of frames to read
+            amount = frames - read;
+            if(amount > max) amount = max;
+
+            r = sf_readf_short(snd->snd, temp, amount);
+            if(r == 0) break;
+
+            // Mix channels together by averaging all channels and store to buffer
+            for(i = 0; i < r; i++) {
+                mix_sum = 0;
+                for(k = 0; k < info->channels; k++) mix_sum += temp[i * info->channels + k];
+                data[read] = mix_sum/info->channels;
+                read++;
+            }
+        }
+    } else if(info->channels == 1) { // Upmix from mono by copying channel
+        while(read < frames) {
+            // Calculate # of frames to read
+            amount = frames - read;
+            if(amount > temp_len) amount = temp_len;
+
+            r = sf_readf_short(snd->snd, temp, amount);
+            if(r == 0) break;
+
+            // Write every frame channel times to the buffer
+            for(i = 0; i < r; i++) {
+                for(k = 0; k < buf->channels; k++) {
+                    data[read * buf->channels + k] = temp[i];
+                }
+                read++;
+            }
+        }
+    } else {
+        rb_raise(eRubyAudioError, "unsupported mix from %d to %d", buf->channels, info->channels);
+    }
+
+    buf->real_size = read;
+}
+
+static void ra_sound_read_int(RA_SOUND *snd, RA_BUFFER *buf, sf_count_t frames) {
+    static int temp[1024];
+    int temp_len = 1024;
+    int *data = (int*)buf->data;
+
+    // Get info struct
+    SF_INFO *info;
+    Data_Get_Struct(snd->info, SF_INFO, info);
+
+    // Up/Downmix based on channel matching
+    sf_count_t read = 0, r, amount;
+    int i, k;
+    if(buf->channels == info->channels) { // Simply read data without mix
+        read = sf_readf_int(snd->snd, data, frames);
+    } else if(buf->channels == 1) { // Downmix to mono
+        sf_count_t max = temp_len / info->channels;
+        int channels, mix_sum;
+
+        while(read < frames) {
+            // Calculate # of frames to read
+            amount = frames - read;
+            if(amount > max) amount = max;
+
+            r = sf_readf_int(snd->snd, temp, amount);
+            if(r == 0) break;
+
+            // Mix channels together by averaging all channels and store to buffer
+            for(i = 0; i < r; i++) {
+                mix_sum = 0;
+                for(k = 0; k < info->channels; k++) mix_sum += temp[i * info->channels + k];
+                data[read] = mix_sum/info->channels;
+                read++;
+            }
+        }
+    } else if(info->channels == 1) { // Upmix from mono by copying channel
+        while(read < frames) {
+            // Calculate # of frames to read
+            amount = frames - read;
+            if(amount > temp_len) amount = temp_len;
+
+            r = sf_readf_int(snd->snd, temp, amount);
+            if(r == 0) break;
+
+            // Write every frame channel times to the buffer
+            for(i = 0; i < r; i++) {
+                for(k = 0; k < buf->channels; k++) {
+                    data[read * buf->channels + k] = temp[i];
+                }
+                read++;
+            }
+        }
+    } else {
+        rb_raise(eRubyAudioError, "unsupported mix from %d to %d", buf->channels, info->channels);
+    }
+
+    buf->real_size = read;
+}
+
+static void ra_sound_read_float(RA_SOUND *snd, RA_BUFFER *buf, sf_count_t frames) {
+    static float temp[1024];
+    int temp_len = 1024;
+    float *data = (float*)buf->data;
+
+    // Get info struct
+    SF_INFO *info;
+    Data_Get_Struct(snd->info, SF_INFO, info);
+
+    // Up/Downmix based on channel matching
+    sf_count_t read = 0, r, amount;
+    int i, k;
+    if(buf->channels == info->channels) { // Simply read data without mix
+        read = sf_readf_float(snd->snd, data, frames);
+    } else if(buf->channels == 1) { // Downmix to mono
+        sf_count_t max = temp_len / info->channels;
+        int channels, mix_sum;
+
+        while(read < frames) {
+            // Calculate # of frames to read
+            amount = frames - read;
+            if(amount > max) amount = max;
+
+            r = sf_readf_float(snd->snd, temp, amount);
+            if(r == 0) break;
+
+            // Mix channels together by averaging all channels and store to buffer
+            for(i = 0; i < r; i++) {
+                mix_sum = 0;
+                for(k = 0; k < info->channels; k++) mix_sum += temp[i * info->channels + k];
+                data[read] = mix_sum/info->channels;
+                read++;
+            }
+        }
+    } else if(info->channels == 1) { // Upmix from mono by copying channel
+        while(read < frames) {
+            // Calculate # of frames to read
+            amount = frames - read;
+            if(amount > temp_len) amount = temp_len;
+
+            r = sf_readf_float(snd->snd, temp, amount);
+            if(r == 0) break;
+
+            // Write every frame channel times to the buffer
+            for(i = 0; i < r; i++) {
+                for(k = 0; k < buf->channels; k++) {
+                    data[read * buf->channels + k] = temp[i];
+                }
+                read++;
+            }
+        }
+    } else {
+        rb_raise(eRubyAudioError, "unsupported mix from %d to %d", buf->channels, info->channels);
+    }
+
+    buf->real_size = read;
+}
+
+static void ra_sound_read_double(RA_SOUND *snd, RA_BUFFER *buf, sf_count_t frames) {
+    static double temp[1024];
+    int temp_len = 1024;
+    double *data = (double*)buf->data;
+
+    // Get info struct
+    SF_INFO *info;
+    Data_Get_Struct(snd->info, SF_INFO, info);
+
+    // Up/Downmix based on channel matching
+    sf_count_t read = 0, r, amount;
+    int i, k;
+    if(buf->channels == info->channels) { // Simply read data without mix
+        read = sf_readf_double(snd->snd, data, frames);
+    } else if(buf->channels == 1) { // Downmix to mono
+        sf_count_t max = temp_len / info->channels;
+        int channels, mix_sum;
+
+        while(read < frames) {
+            // Calculate # of frames to read
+            amount = frames - read;
+            if(amount > max) amount = max;
+
+            r = sf_readf_double(snd->snd, temp, amount);
+            if(r == 0) break;
+
+            // Mix channels together by averaging all channels and store to buffer
+            for(i = 0; i < r; i++) {
+                mix_sum = 0;
+                for(k = 0; k < info->channels; k++) mix_sum += temp[i * info->channels + k];
+                data[read] = mix_sum/info->channels;
+                read++;
+            }
+        }
+    } else if(info->channels == 1) { // Upmix from mono by copying channel
+        while(read < frames) {
+            // Calculate # of frames to read
+            amount = frames - read;
+            if(amount > temp_len) amount = temp_len;
+
+            r = sf_readf_double(snd->snd, temp, amount);
+            if(r == 0) break;
+
+            // Write every frame channel times to the buffer
+            for(i = 0; i < r; i++) {
+                for(k = 0; k < buf->channels; k++) {
+                    data[read * buf->channels + k] = temp[i];
+                }
+                read++;
+            }
+        }
+    } else {
+        rb_raise(eRubyAudioError, "unsupported mix from %d to %d", buf->channels, info->channels);
+    }
+
+    buf->real_size = read;
+}
+
 /*
  * call-seq:
  *   snd.read(buf, frames) => integer
@@ -143,39 +375,35 @@ static VALUE ra_sound_read(VALUE self, VALUE buf, VALUE frames) {
     RA_BUFFER *b;
     Data_Get_Struct(buf, RA_BUFFER, b);
 
-    // Get info struct
-    SF_INFO *info;
-    Data_Get_Struct(snd->info, SF_INFO, info);
-
-    // Check buffer channels matches actual channels
-    if(b->channels != info->channels) {
-        rb_raise(eRubyAudioError, "channel count mismatch: %d vs %d", b->channels, info->channels);
-    }
-
     // Double-check frame count against buffer size
     sf_count_t f = (sf_count_t)NUM2OFFT(frames);
     if(f < 0 || f > b->size) {
         rb_raise(eRubyAudioError, "frame count invalid");
     }
 
-    // Read data
-    sf_count_t read;
+    // Shortcut for 0 frame reads
+    if(f == 0) {
+        b->real_size = 0;
+        return INT2FIX(b->real_size);;
+    }
+
+    // Read based on type
     switch(b->type) {
         case RA_BUFFER_TYPE_SHORT:
-            read = sf_readf_short(snd->snd, b->data, f);
+            ra_sound_read_short(snd, b, f);
             break;
         case RA_BUFFER_TYPE_INT:
-            read = sf_readf_int(snd->snd, b->data, f);
+            ra_sound_read_int(snd, b, f);
             break;
         case RA_BUFFER_TYPE_FLOAT:
-            read = sf_readf_float(snd->snd, b->data, f);
+            ra_sound_read_float(snd, b, f);
             break;
         case RA_BUFFER_TYPE_DOUBLE:
-            read = sf_readf_double(snd->snd, b->data, f);
+            ra_sound_read_double(snd, b, f);
             break;
     }
-    b->real_size = read;
 
+    // Return read
     return INT2FIX(b->real_size);
 }
 
