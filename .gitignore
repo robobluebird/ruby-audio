@@ -6,3 +6,4 @@
 /ext/*.bundle
 /ext/*.so
 /ext/*.dll
+/ext/*.log
