@@ -10,6 +10,14 @@ module RubyAudio
   #   buf = RubyAudio::Buffer.float(1000)
   #   buf = RubyAudio::Buffer.new("float", 1000, 1)
   class Buffer < CBuffer
+    include Enumerable
+
+    def each 
+      self.size.times do |i|
+        yield self[i]
+      end
+    end
+
     [:short, :int, :float, :double].each do |type|
       eval "def self.#{type}(frames, channels=1); self.new(:#{type}, frames, channels); end"
     end

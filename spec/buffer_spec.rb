@@ -59,4 +59,30 @@ describe RubyAudio::Buffer do
     buf[4] = 140
     buf2[4].should == 100
   end
+
+  context ".each" do
+    before(:each) do
+      @buf = RubyAudio::Buffer.int(10, 2)
+      10.times do |i|
+        @buf[i] = [i, i]
+      end
+    end
+
+    it "should yield the elements in order" do
+      i = 0
+      @buf.each do |left, right|
+        left.should == i
+        right.should == i
+        i += 1
+      end
+    end
+
+    it "shouldn't do anything on an empty buffer" do
+      buf = RubyAudio::Buffer.int(0, 2)
+
+      buf.each do
+        fail "This shouldn't be executed"
+      end
+    end
+  end
 end
