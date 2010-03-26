@@ -48,10 +48,9 @@ void Init_rubyaudio_ext() {
     rb_define_const(mRubyAudio, "FORMAT_SD2", INT2FIX(SF_FORMAT_SD2));
     rb_define_const(mRubyAudio, "FORMAT_FLAC", INT2FIX(SF_FORMAT_FLAC));
     rb_define_const(mRubyAudio, "FORMAT_CAF", INT2FIX(SF_FORMAT_CAF));
-    rb_define_const(mRubyAudio, "FORMAT_WVE", INT2FIX(SF_FORMAT_WVE));
+#ifdef HAVE_CONST_SF_FORMAT_OGG
     rb_define_const(mRubyAudio, "FORMAT_OGG", INT2FIX(SF_FORMAT_OGG));
-    rb_define_const(mRubyAudio, "FORMAT_MPC2K", INT2FIX(SF_FORMAT_MPC2K));
-    rb_define_const(mRubyAudio, "FORMAT_RF64", INT2FIX(SF_FORMAT_RF64));
+#endif
 
     // Subtypes from here on
     rb_define_const(mRubyAudio, "FORMAT_PCM_S8", INT2FIX(SF_FORMAT_PCM_S8));
@@ -76,7 +75,9 @@ void Init_rubyaudio_ext() {
     rb_define_const(mRubyAudio, "FORMAT_DWVW_N", INT2FIX(SF_FORMAT_DWVW_N));
     rb_define_const(mRubyAudio, "FORMAT_DPCM_8", INT2FIX(SF_FORMAT_DPCM_8));
     rb_define_const(mRubyAudio, "FORMAT_DPCM_16", INT2FIX(SF_FORMAT_DPCM_16));
+#ifdef HAVE_CONST_SF_FORMAT_OGG
     rb_define_const(mRubyAudio, "FORMAT_VORBIS", INT2FIX(SF_FORMAT_VORBIS));
+#endif
 
     // Endian-ness options
     rb_define_const(mRubyAudio, "ENDIAN_FILE", INT2FIX(SF_ENDIAN_FILE));

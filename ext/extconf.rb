@@ -9,4 +9,7 @@ unless find_library 'sndfile', 'sf_open'
   exit
 end
 
+# Check for format support
+have_const('SF_FORMAT_OGG', 'sndfile.h')
+
 create_makefile 'rubyaudio_ext'
