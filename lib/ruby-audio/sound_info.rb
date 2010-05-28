@@ -36,5 +36,31 @@ module RubyAudio
     end
 
     alias_method :seekable?, :seekable
+
+    def main_format
+      calculate_format if @main_format.nil?
+      @main_format
+    end
+
+    def sub_format
+      calculate_format if @sub_format.nil?
+      @sub_format
+    end
+
+    private
+    def calculate_format
+      RubyAudio.constants.grep(/FORMAT_/).each do |f|
+        next if f.include?('MASK') # Skip mask constants
+
+        val = RubyAudio.const_get(f)
+        if val > RubyAudio::FORMAT_SUBMASK
+          # Main format
+          @main_format = f if format & RubyAudio::FORMAT_TYPEMASK == val
+        else
+          # Sub format
+          @sub_format = f if format & RubyAudio::FORMAT_SUBMASK == val
+        end
+      end
+    end
   end
 end

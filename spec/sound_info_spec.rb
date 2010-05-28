@@ -36,4 +36,14 @@ describe RubyAudio::SoundInfo do
     info.samplerate.should == info2.samplerate
     info.format.should == info2.format
   end
+
+  it "should calculate main and sub format from format" do
+    info = RubyAudio::SoundInfo.new(:format => RubyAudio::FORMAT_WAV|RubyAudio::FORMAT_PCM_16)
+    info.main_format.should == "FORMAT_WAV"
+    info.sub_format.should == "FORMAT_PCM_16"
+
+    info = RubyAudio::SoundInfo.new(:format => RubyAudio::FORMAT_WAVEX|RubyAudio::FORMAT_MS_ADPCM)
+    info.main_format.should == "FORMAT_WAVEX"
+    info.sub_format.should == "FORMAT_MS_ADPCM"
+  end
 end
