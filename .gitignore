@@ -1,6 +1,5 @@
 /pkg/*
 /rdoc/
-*.gemspec
 /ext/*.o
 /ext/Makefile
 /ext/*.bundle

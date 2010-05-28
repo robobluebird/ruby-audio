@@ -6,7 +6,7 @@ require 'spec/rake/spectask'
 
 spec = Gem::Specification.new do |s|
   s.name    = 'ruby-audio'
-  s.version = '1.2.0'
+  s.version = '1.3.0'
   s.summary = 'ruby-audio wraps around libsndfile to provide simplified sound reading and writing support to ruby programs'
   s.authors  = ['Stephen Augenstein']
   s.email    = 'perl.programmer@gmail.com'
@@ -27,6 +27,13 @@ task :default => :spec
 
 # Rake gem & package routines
 Rake::GemPackageTask.new(spec).define
+
+desc 'Generate a gemspec file'
+task :gemspec do
+  File.open("#{spec.name}.gemspec", 'w') do |f|
+    f.write spec.to_ruby
+  end
+end
 
 desc "Generate documentation"
 Rake::RDocTask.new(:rdoc) do |rdoc|
