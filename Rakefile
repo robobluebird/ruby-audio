@@ -6,7 +6,7 @@ require 'spec/rake/spectask'
 
 spec = Gem::Specification.new do |s|
   s.name    = 'ruby-audio'
-  s.version = '1.3.0'
+  s.version = '1.4.0'
   s.summary = 'ruby-audio wraps around libsndfile to provide simplified sound reading and writing support to ruby programs'
   s.authors  = ['Stephen Augenstein']
   s.email    = 'perl.programmer@gmail.com'
