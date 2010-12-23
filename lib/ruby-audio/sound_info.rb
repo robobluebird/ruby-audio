@@ -49,7 +49,7 @@ module RubyAudio
 
     private
     def calculate_format
-      RubyAudio.constants.grep(/FORMAT_/).each do |f|
+      RubyAudio.constants.grep(/FORMAT_/).map(&:to_s).each do |f|
         next if f.include?('MASK') # Skip mask constants
 
         val = RubyAudio.const_get(f)

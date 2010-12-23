@@ -437,7 +437,7 @@ static VALUE ra_sound_write(VALUE self, VALUE buf) {
     }
 
     // Write data
-    sf_count_t written;
+    sf_count_t written = 0;
     switch(b->type) {
         case RA_BUFFER_TYPE_SHORT:
             written = sf_writef_short(snd->snd, b->data, b->real_size);

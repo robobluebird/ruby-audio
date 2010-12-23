@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/spec_helper.rb'
+require "spec_helper.rb"
 
 describe RubyAudio::Sound do
   MONO_TEST_WAV = File.dirname(__FILE__)+'/data/what.wav'

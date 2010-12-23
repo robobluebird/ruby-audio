@@ -13,8 +13,8 @@ typedef enum {
 typedef struct {
     BUFFER_TYPE type;
     void *data;
-    int size;
-    int real_size;
+    long size;
+    long real_size;
     int channels;
 } RA_BUFFER;
 
@@ -33,8 +33,8 @@ static VALUE ra_buffer_real_size(VALUE self);
 static VALUE ra_buffer_real_size_set(VALUE self, VALUE new_real_size);
 static VALUE ra_buffer_type(VALUE self);
 static VALUE ra_buffer_aref(VALUE self, VALUE index);
-static VALUE ra_buffer_index_get(RA_BUFFER *buf, int i);
+static VALUE ra_buffer_index_get(RA_BUFFER *buf, long i);
 static VALUE ra_buffer_aset(VALUE self, VALUE index, VALUE val);
-static void ra_buffer_index_set(RA_BUFFER *buf, int i, VALUE val);
+static void ra_buffer_index_set(RA_BUFFER *buf, long i, VALUE val);
 
 #endif        //  #ifndef RA_BUFFER_H

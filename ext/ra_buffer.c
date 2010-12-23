@@ -48,13 +48,21 @@ static void ra_buffer_free(RA_BUFFER *buf) {
  * Uses size, channels, and type to allocate a properly sized array and set data
  * to the pointer for that data. Returns size.
  */
-static int ra_buffer_alloc_data(RA_BUFFER *buf) {
-    int size;
+static long ra_buffer_alloc_data(RA_BUFFER *buf) {
+    long size = 0;
     switch(buf->type) {
-        case RA_BUFFER_TYPE_SHORT: size = sizeof(short)*buf->size*buf->channels; break;
-        case RA_BUFFER_TYPE_INT: size = sizeof(int)*buf->size*buf->channels; break;
-        case RA_BUFFER_TYPE_FLOAT: size = sizeof(float)*buf->size*buf->channels; break;
-        case RA_BUFFER_TYPE_DOUBLE: size = sizeof(double)*buf->size*buf->channels; break;
+        case RA_BUFFER_TYPE_SHORT:
+            size = sizeof(short) * buf->size * buf->channels;
+            break;
+        case RA_BUFFER_TYPE_INT:
+            size = sizeof(int) * buf->size * buf->channels;
+            break;
+        case RA_BUFFER_TYPE_FLOAT:
+            size = sizeof(float) * buf->size * buf->channels;
+            break;
+        case RA_BUFFER_TYPE_DOUBLE:
+            size = sizeof(double) * buf->size * buf->channels;
+            break;
     }
     buf->data = (void*)xmalloc(size);
     return size;
@@ -95,7 +103,7 @@ static VALUE ra_buffer_init(int argc, VALUE *argv, VALUE self) {
     buf->channels = (argc == 3) ? FIX2INT(argv[2]) : 1;
 
     // Allocate data array based on type
-    buf->size = FIX2INT(argv[1]);
+    buf->size = FIX2LONG(argv[1]);
     buf->real_size = 0;
     if(strcmp(buf_type, "short") == 0) buf->type = RA_BUFFER_TYPE_SHORT;
     else if(strcmp(buf_type, "int") == 0) buf->type = RA_BUFFER_TYPE_INT;
@@ -124,7 +132,7 @@ static VALUE ra_buffer_init_copy(VALUE copy, VALUE buf) {
 
     // Clone data
     memcpy(copy_struct, buf_struct, sizeof(RA_BUFFER));
-    int size = ra_buffer_alloc_data(copy_struct);
+    long size = ra_buffer_alloc_data(copy_struct);
     memcpy(copy_struct->data, buf_struct->data, size);
 
     return copy;
@@ -151,7 +159,7 @@ static VALUE ra_buffer_channels(VALUE self) {
 static VALUE ra_buffer_size(VALUE self) {
     RA_BUFFER *buf;
     Data_Get_Struct(self, RA_BUFFER, buf);
-    return INT2FIX(buf->size);
+    return LONG2FIX(buf->size);
 }
 
 /*
@@ -164,7 +172,7 @@ static VALUE ra_buffer_size(VALUE self) {
 static VALUE ra_buffer_real_size(VALUE self) {
     RA_BUFFER *buf;
     Data_Get_Struct(self, RA_BUFFER, buf);
-    return INT2FIX(buf->real_size);
+    return LONG2FIX(buf->real_size);
 }
 
 /*:nodoc:*/
@@ -172,7 +180,7 @@ static VALUE ra_buffer_real_size_set(VALUE self, VALUE real_size) {
     RA_BUFFER *buf;
     Data_Get_Struct(self, RA_BUFFER, buf);
 
-    int new_real_size = FIX2INT(real_size);
+    long new_real_size = FIX2LONG(real_size);
     if(new_real_size > buf->size) {
         buf->real_size = buf->size;
     } else if(new_real_size < 0) {
@@ -181,7 +189,7 @@ static VALUE ra_buffer_real_size_set(VALUE self, VALUE real_size) {
         buf->real_size = new_real_size;
     }
 
-    return INT2FIX(buf->real_size);
+    return LONG2FIX(buf->real_size);
 }
 
 /*
@@ -219,15 +227,15 @@ static VALUE ra_buffer_aref(VALUE self, VALUE index) {
     Data_Get_Struct(self, RA_BUFFER, buf);
 
     // Bounds check
-    int f = FIX2INT(index);
+    long f = FIX2LONG(index);
     if(f < 0 || f >= buf->real_size) return Qnil;
-    int i = f * buf->channels;
+    long i = f * buf->channels;
 
     if(buf->channels == 1) {
         return ra_buffer_index_get(buf, i);
     } else {
         VALUE frame = rb_ary_new();
-        int j;
+        long j;
         for(j = 0; j < buf->channels; j++) {
             rb_ary_push(frame, ra_buffer_index_get(buf, i+j));
         }
@@ -235,7 +243,7 @@ static VALUE ra_buffer_aref(VALUE self, VALUE index) {
     }
 }
 
-static VALUE ra_buffer_index_get(RA_BUFFER *buf, int i) {
+static VALUE ra_buffer_index_get(RA_BUFFER *buf, long i) {
     switch(buf->type) {
         case RA_BUFFER_TYPE_SHORT: return INT2FIX((int)((short*)buf->data)[i]);
         case RA_BUFFER_TYPE_INT: return INT2FIX(((int*)buf->data)[i]);
@@ -263,9 +271,9 @@ static VALUE ra_buffer_aset(VALUE self, VALUE index, VALUE val) {
     Data_Get_Struct(self, RA_BUFFER, buf);
 
     // Bounds check
-    int f = FIX2INT(index);
+    long f = FIX2LONG(index);
     if(f < 0 || f >= buf->size) rb_raise(eRubyAudioError, "setting frame out of bounds");
-    int i = f * buf->channels;
+    long i = f * buf->channels;
 
     // Set data
     if(buf->channels == 1) {
@@ -275,7 +283,7 @@ static VALUE ra_buffer_aset(VALUE self, VALUE index, VALUE val) {
         long length = RARRAY_LEN(val);
         if(length != buf->channels) rb_raise(eRubyAudioError, "array length must match channel count");
 
-        int j;
+        long j;
         for(j = 0; j < length; j++) {
             ra_buffer_index_set(buf, i+j, rb_ary_entry(val, j));
         }
@@ -289,7 +297,7 @@ static VALUE ra_buffer_aset(VALUE self, VALUE index, VALUE val) {
     return val;
 }
 
-static void ra_buffer_index_set(RA_BUFFER *buf, int i, VALUE val) {
+static void ra_buffer_index_set(RA_BUFFER *buf, long i, VALUE val) {
     switch(buf->type) {
         case RA_BUFFER_TYPE_SHORT:
             ((short*)buf->data)[i] = (short)FIX2INT(val);
