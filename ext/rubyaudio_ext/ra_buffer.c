@@ -15,6 +15,7 @@ extern VALUE eRubyAudioError;
 void Init_ra_buffer() {
     VALUE mRubyAudio = rb_define_module("RubyAudio");
     VALUE cRABuffer = rb_define_class_under(mRubyAudio, "CBuffer", rb_cObject);
+    rb_include_module(cRABuffer, rb_mEnumerable);
     rb_define_alloc_func(cRABuffer, ra_buffer_allocate);
     rb_define_method(cRABuffer, "initialize",      ra_buffer_init, -1);
     rb_define_method(cRABuffer, "initialize_copy", ra_buffer_init_copy, 1);
@@ -23,6 +24,7 @@ void Init_ra_buffer() {
     rb_define_method(cRABuffer, "real_size",       ra_buffer_real_size, 0);
     rb_define_method(cRABuffer, "real_size=",      ra_buffer_real_size_set, 1);
     rb_define_method(cRABuffer, "type",            ra_buffer_type, 0);
+    rb_define_method(cRABuffer, "each",            ra_buffer_each, 0);
     rb_define_method(cRABuffer, "[]",              ra_buffer_aref, 1);
     rb_define_method(cRABuffer, "[]=",             ra_buffer_aset, 2);
 
@@ -208,6 +210,27 @@ static VALUE ra_buffer_type(VALUE self) {
         case RA_BUFFER_TYPE_FLOAT: return ID2SYM(ra_float_sym);
         case RA_BUFFER_TYPE_DOUBLE: return ID2SYM(ra_double_sym);
     }
+}
+
+/*
+ * call-seq:
+ *   buf.each {|frame| block } => buf
+ *   buf.each => anEnumerator
+ *
+ * Iterates through each frame in the buffer. Each frame is either a number or
+ * an array of numbers if there are multiple channels.
+ */
+static VALUE ra_buffer_each(VALUE self) {
+    RA_BUFFER *buf;
+    Data_Get_Struct(self, RA_BUFFER, buf);
+
+    RETURN_ENUMERATOR(self, 0, 0);
+
+    long i;
+    for(i = 0; i < buf->real_size; i++) {
+        rb_yield(ra_buffer_aref(self, LONG2FIX(i)));
+    }
+    return self;
 }
 
 /*

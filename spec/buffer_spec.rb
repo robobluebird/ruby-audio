@@ -78,11 +78,16 @@ describe RubyAudio::Buffer do
     end
 
     it "shouldn't do anything on an empty buffer" do
-      buf = RubyAudio::Buffer.int(0, 2)
+      buf = RubyAudio::Buffer.int(50, 2)
 
       buf.each do
         fail "This shouldn't be executed"
       end
+    end
+
+    it "should support usage through returned enumerable" do
+      enum = @buf.each
+      enum.any? {|frame| frame[0] == 5}.should == true
     end
   end
 end
