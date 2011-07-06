@@ -1,30 +1,25 @@
 require "spec_helper.rb"
 
 describe RubyAudio::Sound do
-  MONO_TEST_WAV = File.dirname(__FILE__)+'/data/what.wav'
-  STEREO_TEST_WAV = File.dirname(__FILE__)+'/data/what2.wav'
-  TEST_MP3 = File.dirname(__FILE__)+'/data/what.mp3'
-  OUT_WAV = File.dirname(__FILE__)+'/data/temp.wav'
-
   after :each do
-    File.delete(OUT_WAV) if File.exists?(OUT_WAV)
+    File.delete(fixture('temp.wav')) if File.exists?(fixture('temp.wav'))
   end
 
   it "should open a standard wav without issues" do
     lambda {
-      RubyAudio::Sound.open(MONO_TEST_WAV)
+      RubyAudio::Sound.open(fixture('what.wav'))
     }.should_not raise_error
   end
 
   it "should raise an exception if the mode is invalid" do
     lambda {
-      RubyAudio::Sound.open(MONO_TEST_WAV, 'q')
+      RubyAudio::Sound.open(fixture('what.wav'), 'q')
     }.should raise_error(ArgumentError, 'invalid access mode q')
   end
 
   it "should close the sound on block exit" do
     s = nil
-    RubyAudio::Sound.open(MONO_TEST_WAV) do |snd|
+    RubyAudio::Sound.open(fixture('what.wav')) do |snd|
       snd.closed?.should be_false
       s = snd
     end
@@ -33,18 +28,18 @@ describe RubyAudio::Sound do
 
   it "should raise an exception for an unsupported file" do
     lambda {
-      RubyAudio::Sound.open(TEST_MP3)
+      RubyAudio::Sound.open(fixture('what.mp3'))
     }.should raise_error(RubyAudio::Error, "File contains data in an unknown format.")
   end
 
   it "should raise an exception if file does not exist" do
     lambda {
-      RubyAudio::Sound.open(TEST_MP3+'.not')
+      RubyAudio::Sound.open(fixture('what.mp3')+'.not')
     }.should raise_error(RubyAudio::Error, "System error : No such file or directory.")
   end
 
   it "should have the proper sound info" do
-    RubyAudio::Sound.open(MONO_TEST_WAV) do |snd|
+    RubyAudio::Sound.open(fixture('what.wav')) do |snd|
       snd.info.channels.should == 1
       snd.info.samplerate.should == 16000
       snd.info.format.should == RubyAudio::FORMAT_WAV|RubyAudio::FORMAT_PCM_16
@@ -53,7 +48,7 @@ describe RubyAudio::Sound do
 
   it "should allow seeking" do
     lambda {
-      RubyAudio::Sound.open(MONO_TEST_WAV) do |snd|
+      RubyAudio::Sound.open(fixture('what.wav')) do |snd|
         snd.seek(100)
         buf = snd.read(:float, 100)
         buf[0].should > 0
@@ -63,15 +58,15 @@ describe RubyAudio::Sound do
 
   it "should raise exceptions for invalid seeks" do
     lambda {
-      RubyAudio::Sound.open(MONO_TEST_WAV) {|snd| snd.seek(-1)}
+      RubyAudio::Sound.open(fixture('what.wav')) {|snd| snd.seek(-1)}
     }.should raise_error(RubyAudio::Error, "invalid seek")
     lambda {
-      RubyAudio::Sound.open(MONO_TEST_WAV) {|snd| snd.seek(1000000)}
+      RubyAudio::Sound.open(fixture('what.wav')) {|snd| snd.seek(1000000)}
     }.should raise_error(RubyAudio::Error, "invalid seek")
   end
 
   it "should allow reading samples from the sound" do
-    RubyAudio::Sound.open(STEREO_TEST_WAV) do |snd|
+    RubyAudio::Sound.open(fixture('what2.wav')) do |snd|
       buf = snd.read(:float, 1000)
       buf.size.should == 1000
       buf.real_size.should == 1000
@@ -82,7 +77,7 @@ describe RubyAudio::Sound do
   it "should allow reading into an existing buffer" do
     buf = RubyAudio::Buffer.float(1000)
     buf.real_size.should == 0
-    RubyAudio::Sound.open(MONO_TEST_WAV) do |snd|
+    RubyAudio::Sound.open(fixture('what.wav')) do |snd|
       snd.read(buf)
     end
     buf.real_size.should == 1000
@@ -92,7 +87,7 @@ describe RubyAudio::Sound do
   it "should allow reading into an existing buffer partially" do
     buf = RubyAudio::Buffer.float(1000)
     buf.real_size.should == 0
-    RubyAudio::Sound.open(MONO_TEST_WAV) do |snd|
+    RubyAudio::Sound.open(fixture('what.wav')) do |snd|
       snd.read(buf, 100)
     end
     buf.real_size.should == 100
@@ -103,7 +98,7 @@ describe RubyAudio::Sound do
   it "should allow downmixing to mono on read" do
     buf = RubyAudio::Buffer.int(100, 1)
     buf2 = RubyAudio::Buffer.int(100, 2)
-    RubyAudio::Sound.open(STEREO_TEST_WAV, 'r') do |snd|
+    RubyAudio::Sound.open(fixture('what2.wav'), 'r') do |snd|
       snd.read(buf)
       snd.seek(0)
       snd.read(buf2)
@@ -116,7 +111,7 @@ describe RubyAudio::Sound do
   it "should allow upmixing from mono on read" do
     buf = RubyAudio::Buffer.int(100, 1)
     buf2 = RubyAudio::Buffer.int(100, 2)
-    RubyAudio::Sound.open(STEREO_TEST_WAV, 'r') do |snd|
+    RubyAudio::Sound.open(fixture('what2.wav'), 'r') do |snd|
       snd.read(buf2)
       snd.seek(0)
       snd.read(buf)
@@ -128,7 +123,7 @@ describe RubyAudio::Sound do
   it "should fail read on unsupported up/downmixing" do
     buf = RubyAudio::Buffer.float(100, 5)
     lambda {
-      RubyAudio::Sound.open(STEREO_TEST_WAV) do |snd|
+      RubyAudio::Sound.open(fixture('what2.wav')) do |snd|
         snd.read(buf)
       end
     }.should raise_error(RubyAudio::Error, "unsupported mix from 5 to 2")
@@ -138,12 +133,12 @@ describe RubyAudio::Sound do
     in_buf = RubyAudio::Buffer.float(100)
     out_buf = RubyAudio::Buffer.float(100)
     out_info = nil
-    RubyAudio::Sound.open(MONO_TEST_WAV) do |snd|
+    RubyAudio::Sound.open(fixture('what.wav')) do |snd|
       snd.read(in_buf)
       out_info = snd.info.clone
     end
 
-    RubyAudio::Sound.open(OUT_WAV, 'rw', out_info) do |snd|
+    RubyAudio::Sound.open(fixture('temp.wav'), 'rw', out_info) do |snd|
       snd.write(in_buf)
       snd.seek(0)
       snd.read(out_buf)
@@ -156,12 +151,12 @@ describe RubyAudio::Sound do
     in_buf = RubyAudio::Buffer.float(100)
     out_buf = RubyAudio::Buffer.float(100)
     out_info = nil
-    RubyAudio::Sound.open(MONO_TEST_WAV) do |snd|
+    RubyAudio::Sound.open(fixture('what.wav')) do |snd|
       snd.read(in_buf)
       out_info = snd.info.clone
     end
 
-    RubyAudio::Sound.open(OUT_WAV, 'rw', out_info) do |snd|
+    RubyAudio::Sound.open(fixture('temp.wav'), 'rw', out_info) do |snd|
       snd << in_buf
       snd.seek(0)
       snd.read(out_buf)
@@ -174,7 +169,7 @@ describe RubyAudio::Sound do
     buf = RubyAudio::Buffer.float(100, 5)
     info = RubyAudio::SoundInfo.new :channels => 2, :samplerate => 48000, :format => RubyAudio::FORMAT_WAV|RubyAudio::FORMAT_PCM_16
     lambda {
-      RubyAudio::Sound.open(OUT_WAV, 'w', info) do |snd|
+      RubyAudio::Sound.open(fixture('temp.wav'), 'w', info) do |snd|
         snd.write(buf)
       end
     }.should raise_error(RubyAudio::Error, "channel count mismatch: 5 vs 2")

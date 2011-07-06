@@ -46,4 +46,10 @@ describe RubyAudio::SoundInfo do
     info.main_format.should == "FORMAT_WAVEX"
     info.sub_format.should == "FORMAT_MS_ADPCM"
   end
+
+  it "should return the length of an audio file" do
+    RubyAudio::Sound.open(fixture('what.wav')) do |snd|
+      snd.info.length.should == 26413 / 16000.0
+    end
+  end
 end

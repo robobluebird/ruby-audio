@@ -24,7 +24,7 @@ module RubyAudio
       end
     end
 
-    # Returns a new <code>SoundInfo</code> object that is has the same channel
+    # Returns a new <code>SoundInfo</code> object that has the same channel
     # count, sample rate, and format. This is useful in creating a new sound with
     # the same format as an already existing sound.
     #
@@ -37,14 +37,31 @@ module RubyAudio
 
     alias_method :seekable?, :seekable
 
+    # Returns the main format constant as a string
+    #
+    # Example:
+    #    info = RubyAudio::SoundInfo.new :channels => 1, :samplerate => 48000, :format => RubyAudio::FORMAT_WAV|RubyAudio::FORMAT_PCM_16
+    #    info.main_format
+    #    #=> "FORMAT_WAV"
     def main_format
       calculate_format if @main_format.nil?
       @main_format
     end
 
+    # Returns the sub format constant as a string
+    #
+    # Example:
+    #    info = RubyAudio::SoundInfo.new :channels => 1, :samplerate => 48000, :format => RubyAudio::FORMAT_WAV|RubyAudio::FORMAT_PCM_16
+    #    info.sub_format
+    #    #=> "FORMAT_PCM_16"
     def sub_format
       calculate_format if @sub_format.nil?
       @sub_format
+    end
+
+    # Returns the length of the audio file in seconds
+    def length
+      frames / samplerate.to_f
     end
 
     private
