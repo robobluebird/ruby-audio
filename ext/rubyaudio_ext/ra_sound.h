@@ -9,6 +9,7 @@
 typedef struct {
     SNDFILE *snd;
     VALUE info;
+    VALUE vio_source;
     int mode;
     int closed;
 } RA_SOUND;

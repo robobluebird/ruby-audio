@@ -1,6 +1,11 @@
 #include "ra_sound.h"
 
 extern VALUE eRubyAudioError;
+ID id_size;
+ID id_seek;
+ID id_read;
+ID id_write;
+ID id_tell;
 
 /*
  * Class <code>CSound</code> is a very light wrapper around the
@@ -19,6 +24,13 @@ void Init_ra_sound() {
     rb_define_method(cRASound, "<<", ra_sound_addbuf, 1);
     rb_define_method(cRASound, "close", ra_sound_close, 0);
     rb_define_method(cRASound, "closed?", ra_sound_closed, 0);
+
+    // Get refs to commonly used symbols and ids
+    id_size = rb_intern("size");
+    id_seek = rb_intern("seek");
+    id_read = rb_intern("read");
+    id_write = rb_intern("write");
+    id_tell = rb_intern("tell");
 }
 
 static VALUE ra_sound_allocate(VALUE klass) {
@@ -31,6 +43,7 @@ static VALUE ra_sound_allocate(VALUE klass) {
 static void ra_sound_mark(RA_SOUND *snd) {
     if(snd) {
         rb_gc_mark(snd->info);
+        if(snd->vio_source) rb_gc_mark(snd->vio_source);
     }
 }
 
@@ -56,15 +69,56 @@ static VALUE ra_sound_s_open(int argc, VALUE *argv, VALUE klass) {
     return rb_ensure(rb_yield, obj, ra_sound_close_safe, obj);
 }
 
+static sf_count_t ra_vir_size(void *user_data) {
+    VALUE io = (VALUE)user_data;
+    return NUM2OFFT(rb_funcall(io, id_size, 0));
+}
+
+static sf_count_t ra_vir_seek(sf_count_t offset, int whence, void *user_data) {
+    VALUE io = (VALUE)user_data;
+    rb_funcall(io, id_seek, 2, OFFT2NUM(offset), INT2FIX(whence));
+    return NUM2OFFT(rb_funcall(io, id_tell, 0));
+}
+
+static sf_count_t ra_vir_read(void *ptr, sf_count_t count, void *user_data) {
+    VALUE io = (VALUE)user_data;
+    if(count <= 0) return 0;
+
+    // It would be nice if we could create a fake buffer string with ptr as the target
+    VALUE read = rb_funcall(io, id_read, 1, OFFT2NUM(count));
+    sf_count_t len = RSTRING_LEN(read);
+    memcpy(ptr, RSTRING_PTR(read), RSTRING_LEN(read));
+    return len;
+}
+
+static sf_count_t ra_vir_write(const void *ptr, sf_count_t count, void *user_data) {
+    VALUE io = (VALUE)user_data;
+    if(count <= 0) return 0;
+
+    // It would be nice if we could create a fake string with ptr as the source
+    VALUE str = rb_str_new(ptr, count);
+    VALUE wrote = rb_funcall(io, id_write, 1, str);
+    return NUM2OFFT(wrote);
+}
+
+static sf_count_t ra_vir_tell(void *user_data) {
+    VALUE io = (VALUE)user_data;
+    return NUM2OFFT(rb_funcall(io, id_tell, 0));
+}
+
 /*
  * call-seq:
  *   CSound.new(path, mode, info) => snd
+ *   CSound.new(io, mode, info) => snd
  *
  * Returns a new <code>CSound</code> object for the audio file at the given path
- * with the given mode. Valid modes are <code>"r"</code>, <code>"w"</code>, or
- * <code>"rw"</code>.
+ * or using the given fixed-length IO-like object with the given mode. Valid modes
+ * are <code>"r"</code>, <code>"w"</code>, or <code>"rw"</code>.
+ * <code>StringIO</code> is the only valid IO-like object in the standard library,
+ * although any object that implements <code>size</code>, <code>seek</code>,
+ * <code>read</code>, <code>write</code>, and <code>tell</code> will work.
  */
-static VALUE ra_sound_init(VALUE self, VALUE path, VALUE mode, VALUE info) {
+static VALUE ra_sound_init(VALUE self, VALUE source, VALUE mode, VALUE info) {
     RA_SOUND *snd;
     Data_Get_Struct(self, RA_SOUND, snd);
 
@@ -79,10 +133,25 @@ static VALUE ra_sound_init(VALUE self, VALUE path, VALUE mode, VALUE info) {
     snd->info = info;
 
     // Open sound file
-    const char *p = StringValueCStr(path);
     SF_INFO *sf_info;
     Data_Get_Struct(info, SF_INFO, sf_info);
-    snd->snd = sf_open(p, snd->mode, sf_info);
+    if(TYPE(source) == T_STRING) {
+        // Open sound file at the path
+        const char *p = StringValueCStr(source);
+        snd->snd = sf_open(p, snd->mode, sf_info);
+    } else {
+        // Check if the source implements the right methods
+        if(!rb_respond_to(source, id_size)) rb_raise(eRubyAudioError, "source does not implement size");
+        if(!rb_respond_to(source, id_seek)) rb_raise(eRubyAudioError, "source does not implement seek");
+        if(!rb_respond_to(source, id_read)) rb_raise(eRubyAudioError, "source does not implement read");
+        if(!rb_respond_to(source, id_write)) rb_raise(eRubyAudioError, "source does not implement write");
+        if(!rb_respond_to(source, id_tell)) rb_raise(eRubyAudioError, "source does not implement tell");
+
+        // Open sound using the virtual IO API
+        snd->vio_source = source;
+        SF_VIRTUAL_IO vir_io = {ra_vir_size, ra_vir_seek, ra_vir_read, ra_vir_write, ra_vir_tell};
+        snd->snd = sf_open_virtual(&vir_io, snd->mode, sf_info, (void*)source);
+    }
     if(snd->snd == NULL) rb_raise(eRubyAudioError, sf_strerror(snd->snd));
     snd->closed = 0;
 

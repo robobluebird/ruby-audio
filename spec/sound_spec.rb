@@ -11,6 +11,12 @@ describe RubyAudio::Sound do
     }.should_not raise_error
   end
 
+  it "should open an IO conformer without issues" do
+    lambda {
+      RubyAudio::Sound.open(io_fixture('what.wav'))
+    }.should_not raise_error
+  end
+
   it "should raise an exception if the mode is invalid" do
     lambda {
       RubyAudio::Sound.open(fixture('what.wav'), 'q')
@@ -56,6 +62,16 @@ describe RubyAudio::Sound do
     }.should_not raise_error
   end
 
+  it "should allow seeking in IO conformers" do
+    lambda {
+      RubyAudio::Sound.open(io_fixture('what.wav')) do |snd|
+        snd.seek(100)
+        buf = snd.read(:float, 100)
+        buf[0].should > 0
+      end
+    }.should_not raise_error
+  end
+
   it "should raise exceptions for invalid seeks" do
     lambda {
       RubyAudio::Sound.open(fixture('what.wav')) {|snd| snd.seek(-1)}
@@ -67,6 +83,15 @@ describe RubyAudio::Sound do
 
   it "should allow reading samples from the sound" do
     RubyAudio::Sound.open(fixture('what2.wav')) do |snd|
+      buf = snd.read(:float, 1000)
+      buf.size.should == 1000
+      buf.real_size.should == 1000
+      buf[999].length.should == 2
+    end
+  end
+
+  it "should allow reading samples from IO conformers" do
+    RubyAudio::Sound.open(io_fixture('what2.wav')) do |snd|
       buf = snd.read(:float, 1000)
       buf.size.should == 1000
       buf.real_size.should == 1000
@@ -139,6 +164,24 @@ describe RubyAudio::Sound do
     end
 
     RubyAudio::Sound.open(fixture('temp.wav'), 'rw', out_info) do |snd|
+      snd.write(in_buf)
+      snd.seek(0)
+      snd.read(out_buf)
+    end
+
+    out_buf[50].should == in_buf[50]
+  end
+
+  it "should allow writing to an IO conformer" do
+    in_buf = RubyAudio::Buffer.float(100)
+    out_buf = RubyAudio::Buffer.float(100)
+    out_info = nil
+    RubyAudio::Sound.open(fixture('what.wav')) do |snd|
+      snd.read(in_buf)
+      out_info = snd.info.clone
+    end
+
+    RubyAudio::Sound.open(io_fixture, 'rw', out_info) do |snd|
       snd.write(in_buf)
       snd.seek(0)
       snd.read(out_buf)
