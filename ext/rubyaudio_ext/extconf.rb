@@ -13,7 +13,7 @@ else
 end
 
 INCLUDE_DIRS = ['/opt/local/include', '/usr/local/include', 'C:/Program Files/Mega-Nerd/libsndfile/include', 'C:/Program Files (x86)/Mega-Nerd/libsndfile/include']
-LIB_DIRS = ['/opt/local/lib', '/usr/local/lib', 'C:/Program Files/Mega-Nerd/libsndfile', 'C:/Program Files (x86)/Mega-Nerd/libsndfile']
+LIB_DIRS = ['/opt/local/lib', '/usr/local/lib', 'C:/Program Files/Mega-Nerd/libsndfile/bin', 'C:/Program Files (x86)/Mega-Nerd/libsndfile/bin']
 
 # libsndfile requirements
 find_header 'sndfile.h', *INCLUDE_DIRS
