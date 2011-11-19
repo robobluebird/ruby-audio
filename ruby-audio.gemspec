@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name        = 'ruby-audio'
-  s.version     = '1.5.0'
+  s.version     = '1.6.0'
   s.platform    = Gem::Platform::RUBY
   s.authors     = ['Stephen Augenstein']
   s.email       = ['perl.programmer@gmail.com']
