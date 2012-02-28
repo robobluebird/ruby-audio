@@ -67,6 +67,7 @@ static long ra_buffer_alloc_data(RA_BUFFER *buf) {
             break;
     }
     buf->data = (void*)xmalloc(size);
+    memset(buf->data, 0, size);
     return size;
 }
 
