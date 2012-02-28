@@ -321,18 +321,21 @@ static VALUE ra_buffer_aset(VALUE self, VALUE index, VALUE val) {
 }
 
 static void ra_buffer_index_set(RA_BUFFER *buf, long i, VALUE val) {
-    switch(buf->type) {
-        case RA_BUFFER_TYPE_SHORT:
-            ((short*)buf->data)[i] = (short)FIX2INT(val);
-            break;
-        case RA_BUFFER_TYPE_INT:
-            ((int*)buf->data)[i] = FIX2INT(val);
-            break;
-        case RA_BUFFER_TYPE_FLOAT:
-            ((float*)buf->data)[i] = (float)RFLOAT_VALUE(val);
-            break;
-        case RA_BUFFER_TYPE_DOUBLE:
-            ((double*)buf->data)[i] = RFLOAT_VALUE(val);
-            break;
+    if(buf->type == RA_BUFFER_TYPE_SHORT || buf->type == RA_BUFFER_TYPE_INT) {
+        // Convert val to an integer
+        VALUE int_obj = rb_Integer(val);
+        if(TYPE(int_obj) != T_FIXNUM) rb_raise(eRubyAudioError, "could not convert frame value to an integer");
+        long int_val = FIX2LONG(int_obj);
+
+        // Set it
+        if(buf->type == RA_BUFFER_TYPE_SHORT) ((short*)buf->data)[i] = (short)int_val;
+        else ((int*)buf->data)[i] = (int)int_val;
+    } else {
+        // Convert val to a float
+        double float_val = RFLOAT_VALUE(rb_Float(val));
+
+        // Set it
+        if(buf->type == RA_BUFFER_TYPE_SHORT) ((float*)buf->data)[i] = (float)float_val;
+        else ((double*)buf->data)[i] = float_val;
     }
 }

@@ -17,10 +17,16 @@ describe RubyAudio::Buffer do
     }.should_not raise_error
   end
 
-  it "should allow [] access on single channel buffers" do
+  it "should allow [] access on integer single channel buffers" do
     buf = RubyAudio::Buffer.int(100, 1)
     buf[0] = 1.3
     buf[0].should == 1
+  end
+
+  it "should allow [] access on floating point single channel buffers" do
+    buf = RubyAudio::Buffer.double(100, 1)
+    buf[30] = 1
+    buf[30].should == 1.0
   end
 
   it "should allow [] access on multi-channel buffers" do
