@@ -335,7 +335,7 @@ static void ra_buffer_index_set(RA_BUFFER *buf, long i, VALUE val) {
         double float_val = RFLOAT_VALUE(rb_Float(val));
 
         // Set it
-        if(buf->type == RA_BUFFER_TYPE_SHORT) ((float*)buf->data)[i] = (float)float_val;
+        if(buf->type == RA_BUFFER_TYPE_FLOAT) ((float*)buf->data)[i] = (float)float_val;
         else ((double*)buf->data)[i] = float_val;
     }
 }

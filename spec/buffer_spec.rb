@@ -21,12 +21,20 @@ describe RubyAudio::Buffer do
     buf = RubyAudio::Buffer.int(100, 1)
     buf[0] = 1.3
     buf[0].should == 1
+
+    buf = RubyAudio::Buffer.short(100, 1)
+    buf[20] = 614
+    buf[20].should == 614
   end
 
   it "should allow [] access on floating point single channel buffers" do
     buf = RubyAudio::Buffer.double(100, 1)
-    buf[30] = 1
-    buf[30].should == 1.0
+    buf[30] = 1.375
+    buf[30].should == 1.375
+
+    buf = RubyAudio::Buffer.float(100, 1)
+    buf[12] = 5
+    buf[12].should == 5.0
   end
 
   it "should allow [] access on multi-channel buffers" do
