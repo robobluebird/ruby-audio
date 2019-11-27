@@ -1,11 +1,16 @@
 = ruby-audio
 
-Gemified release of ruby/audio. ruby-audio wraps around
+Working fork of gemified release of ruby/audio.
+
+ruby-audio wraps around
 libsndfile[http://www.mega-nerd.com/libsndfile/] to provide simplified sound
 reading and writing support to ruby programs. The core is the RubyAudio::Sound
 class, which is a subclass of RubyAudio::CSound. RubyAudio::Buffer contains
 sound data and RubyAudio::SoundInfo contains information about the format of a
 sound file.
+
+I am now using it in ruby-lofi[http://github.com/robobluebird/ruby-lofi] and also
+as an experimental ground for writing C extension ruby.
 
 == About This Release
 
@@ -14,26 +19,11 @@ Please contact me with any questions or comments.
 
 == Installation
 
-  gem install ruby-audio --source="http://gemcutter.org"
-
+  `git clone https://github.com/robobluebird/ruby-audio`
+  `cd ruby-audio`
+  `gem build ruby-audio.gemspec`
+  `gem install ./ruby-audio-1.6.2.gem`
+  
 === Prerequisites
 
 - libsndfile[http://www.mega-nerd.com/libsndfile/]
-
-== License
-
-Copyright (C) 2010  Stephen Augenstein
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
