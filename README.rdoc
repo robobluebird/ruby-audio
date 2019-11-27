@@ -12,11 +12,6 @@ sound file.
 I am now using it in ruby-lofi[http://github.com/robobluebird/ruby-lofi] and also
 as an experimental ground for writing C extension ruby.
 
-== About This Release
-
-Since it wasn't being maintained, I've taken it under my wing to get it usable.
-Please contact me with any questions or comments.
-
 == Installation
 
   `git clone https://github.com/robobluebird/ruby-audio`
