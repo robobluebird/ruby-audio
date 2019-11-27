@@ -36,6 +36,7 @@ static VALUE ra_buffer_each(VALUE self);
 static VALUE ra_buffer_aref(VALUE self, VALUE index);
 static VALUE ra_buffer_index_get(RA_BUFFER *buf, long i);
 static VALUE ra_buffer_aset(VALUE self, VALUE index, VALUE val);
+static VALUE ra_buffer_rms(VALUE self, VALUE group_size);
 static void ra_buffer_index_set(RA_BUFFER *buf, long i, VALUE val);
 
 #endif        //  #ifndef RA_BUFFER_H

@@ -25,6 +25,7 @@ void Init_ra_buffer() {
     rb_define_method(cRABuffer, "real_size=",      ra_buffer_real_size_set, 1);
     rb_define_method(cRABuffer, "type",            ra_buffer_type, 0);
     rb_define_method(cRABuffer, "each",            ra_buffer_each, 0);
+    rb_define_method(cRABuffer, "rms",             ra_buffer_rms, 1);
     rb_define_method(cRABuffer, "[]",              ra_buffer_aref, 1);
     rb_define_method(cRABuffer, "[]=",             ra_buffer_aset, 2);
 
@@ -319,6 +320,68 @@ static VALUE ra_buffer_aset(VALUE self, VALUE index, VALUE val) {
     }
 
     return val;
+}
+
+/*
+ * call-seq:
+ *   buf.rms(integer) => array
+ *
+ * Returns an array representing rms and peak (+/-) values for a given buffer.
+ *
+ *   rms = buf.rms(5) # Mono sound
+ *   rms[0]           #=> [0.4, 1.0, -1.0]
+ *
+ *   rms = buf.rms(5) # Stereo sound
+ *   rms[0]           #=> [[0.4, 0.4], [1.0, 1.0], [-1.0, -1.0]]
+ */
+static VALUE ra_buffer_rms(VALUE self, VALUE group_size) {
+  RA_BUFFER *buf;
+  Data_Get_Struct(self, RA_BUFFER, buf);
+
+  // convert group_size from rb VALUE to int
+  group_size = FIX2INT(group_size);
+
+  // number of groups of x in size of buffer 
+  long num_groups = buf->real_size / group_size;
+  if (buf->real_size % num_groups > 0) {
+    num_groups++;
+  }
+
+  // instantiate the result array
+  VALUE result = rb_ary_new2(num_groups);
+
+  // if mono...
+  if(buf->channels == 1) {
+    for (int i = 0; i < num_groups; i++) {
+      double max = 0.0;
+      double min = 0.0;
+      double sum = 0.0;
+      VALUE group = rb_ary_new2(3);
+
+      for (int j = 0; j < group_size; j++) {
+        // cast data in j position to a float pointer then a double?
+        double val = (double)((float*)buf->data)[j];
+
+        // maybe set max or min
+        if (val > max) max = val;
+        if (val < min) min = val;
+
+        sum = sum + (val * val); 
+      }
+
+      // add rms, max, and min to local array
+      // rms == square root of mean of squares
+      rb_ary_push(group, rb_float_new(sqrt(sum / group_size)));
+      rb_ary_push(group, rb_float_new(max));
+      rb_ary_push(group, rb_float_new(min));
+
+      // add local array to result array
+      rb_ary_push(result, group);
+    }
+  } else {
+  }
+
+  return result;
 }
 
 static void ra_buffer_index_set(RA_BUFFER *buf, long i, VALUE val) {

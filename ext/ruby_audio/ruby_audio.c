@@ -15,7 +15,7 @@ VALUE eRubyAudioError;
  *
  * Error class for RubyAudio
  */
-void Init_rubyaudio_ext() {
+void Init_ruby_audio() {
     // Create RubyAudio module and other setup
     VALUE mRubyAudio = rb_define_module("RubyAudio");
     eRubyAudioError = rb_define_class_under(mRubyAudio, "Error", rb_eStandardError);
